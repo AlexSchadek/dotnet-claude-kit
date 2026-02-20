@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "roslyn-navigator": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "./mcp/roslyn-navigator/roslyn-navigator.csproj",
+        "--",
+        "--solution",
+        "${workspaceFolder}"
+      ],
+      "description": "Token-efficient .NET codebase navigation via Roslyn semantic analysis"
+    }
+  }
+}

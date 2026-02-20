@@ -1,0 +1,119 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  validate-skills:
+    name: Validate Skills
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check SKILL.md frontmatter
+        run: |
+          errors=0
+          for skill in skills/*/SKILL.md; do
+            # Check YAML frontmatter exists
+            if ! head -1 "$skill" | grep -q "^---$"; then
+              echo "ERROR: $skill missing YAML frontmatter"
+              errors=$((errors + 1))
+            fi
+
+            # Check required fields
+            if ! grep -q "^name:" "$skill"; then
+              echo "ERROR: $skill missing 'name' in frontmatter"
+              errors=$((errors + 1))
+            fi
+            if ! grep -q "^description:" "$skill"; then
+              echo "ERROR: $skill missing 'description' in frontmatter"
+              errors=$((errors + 1))
+            fi
+
+            # Check line count (max 400)
+            lines=$(wc -l < "$skill")
+            if [ "$lines" -gt 400 ]; then
+              echo "ERROR: $skill has $lines lines (max 400)"
+              errors=$((errors + 1))
+            fi
+
+            # Check required sections
+            for section in "Core Principles" "Patterns" "Anti-patterns" "Decision Guide"; do
+              if ! grep -q "## $section" "$skill"; then
+                echo "WARNING: $skill missing '## $section' section"
+              fi
+            done
+          done
+
+          if [ $errors -gt 0 ]; then
+            echo "$errors error(s) found"
+            exit 1
+          fi
+          echo "All skills validated successfully"
+
+  build-mcp:
+    name: Build MCP Server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore mcp/roslyn-navigator/roslyn-navigator.csproj
+
+      - name: Build
+        run: dotnet build mcp/roslyn-navigator/roslyn-navigator.csproj --no-restore -c Release
+
+  test-mcp:
+    name: Test MCP Server
+    runs-on: ubuntu-latest
+    needs: build-mcp
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore mcp/roslyn-navigator/tests/roslyn-navigator.tests.csproj
+
+      - name: Test
+        run: dotnet test mcp/roslyn-navigator/tests/roslyn-navigator.tests.csproj --no-restore -c Release --logger trx --results-directory TestResults
+
+      - name: Publish test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: TestResults/*.trx
+
+  format-check:
+    name: Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore mcp/roslyn-navigator/roslyn-navigator.csproj
+
+      - name: Format check
+        run: dotnet format mcp/roslyn-navigator/roslyn-navigator.csproj --verify-no-changes --no-restore

@@ -1,26 +1,99 @@
 # Contributing to dotnet-claude-kit
 
-Thank you for your interest in contributing! This guide will be finalized before the v0.4.0 release.
+Thank you for your interest in contributing! This guide covers how to add skills, knowledge documents, templates, and MCP improvements.
 
 ## Getting Started
 
 1. Fork and clone the repository
 2. Read the spec in `docs/dotnet-claude-kit-SPEC.md`
-3. Check open issues for areas where help is needed
+3. Read `CLAUDE.md` for repo development conventions
+4. Check open issues for areas where help is needed
 
 ## Contribution Areas
 
-- **Skills** — New skill proposals or improvements to existing skills
-- **Knowledge** — Updates to .NET release notes, anti-patterns, package recommendations
-- **Templates** — New project-type templates or improvements to existing ones
-- **Roslyn MCP** — Bug fixes, performance improvements, new tools
-- **Documentation** — README improvements, examples, guides
+### Skills
 
-## Quality Standards
+Skills are the core of dotnet-claude-kit. Each skill lives at `skills/<skill-name>/SKILL.md`.
 
-- Skills must follow the YAML frontmatter schema (see `CLAUDE.md`)
-- Skills are capped at 400 lines — every line must earn its place
-- Every recommendation needs a "why"
-- Code examples must compile and follow modern C# conventions
+**Before creating a new skill:**
+- Check the [existing skills](#current-skills) to avoid overlap
+- Open a [Skill Proposal](../../issues/new?template=new-skill.yml) issue for discussion
+- Review the skill format in `CLAUDE.md`
 
-More details coming soon.
+**Skill requirements:**
+- YAML frontmatter with `name` and `description`
+- Required sections: Core Principles, Patterns, Anti-patterns, Decision Guide
+- Maximum 400 lines
+- Every recommendation has a "why"
+- Code examples use C# 14 / .NET 10 patterns
+- BAD/GOOD code comparisons in Anti-patterns section
+
+### Knowledge Documents
+
+Knowledge files in `knowledge/` are reference material, not skills.
+
+- `dotnet-whats-new.md` — Updated per .NET preview/release
+- `common-antipatterns.md` — Patterns Claude should never generate
+- `package-recommendations.md` — Vetted NuGet packages
+- `breaking-changes.md` — Migration gotchas
+- `decisions/*.md` — Architecture Decision Records
+
+**To update knowledge:**
+- Open a [Knowledge Update](../../issues/new?template=new-knowledge.yml) issue
+- Verify information against official Microsoft documentation
+- Include links to sources
+
+### Templates
+
+Templates in `templates/<type>/` provide drop-in `CLAUDE.md` files for user projects.
+
+Each template needs:
+- `CLAUDE.md` — The drop-in file with project context, skills references, commands
+- `README.md` — When and how to use the template
+
+### Roslyn MCP Server
+
+The MCP server at `mcp/roslyn-navigator/` provides semantic analysis tools.
+
+```bash
+# Build
+dotnet build mcp/roslyn-navigator/roslyn-navigator.csproj
+
+# Run tests
+dotnet test mcp/roslyn-navigator/tests/roslyn-navigator.tests.csproj
+```
+
+**MCP contribution guidelines:**
+- Tools are read-only — no code generation or modifications
+- Responses are token-optimized — return paths, line numbers, and short snippets
+- Add integration tests using the `TestSolutionFixture`
+- Update the README with any new tool documentation
+
+## Development Workflow
+
+1. Create a feature branch from `main`
+2. Make your changes following the conventions in `CLAUDE.md`
+3. Ensure all validations pass:
+   - Skill frontmatter is valid
+   - Skill files are under 400 lines
+   - MCP server builds: `dotnet build mcp/roslyn-navigator/roslyn-navigator.csproj`
+   - MCP tests pass: `dotnet test mcp/roslyn-navigator/tests/roslyn-navigator.tests.csproj`
+   - Code formatting: `dotnet format --verify-no-changes`
+4. Open a pull request with a clear description of changes
+
+## Code of Conduct
+
+Be kind, be constructive. We're building tools to make .NET development better for everyone.
+
+## Architecture Decision Records
+
+For significant decisions about defaults or patterns, create an ADR:
+
+1. Copy `knowledge/decisions/template.md`
+2. Number it sequentially (e.g., `005-your-decision.md`)
+3. Fill in Context, Decision, and Consequences
+4. Submit as part of your PR
+
+## Questions?
+
+Open an issue or start a discussion. We're happy to help contributors get started.
