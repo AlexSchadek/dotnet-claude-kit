@@ -1,9 +1,9 @@
 using System.ComponentModel;
 using System.Text.Json;
+using CWM.RoslynNavigator.Responses;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using ModelContextProtocol.Server;
-using CWM.RoslynNavigator.Responses;
 
 namespace CWM.RoslynNavigator.Tools;
 

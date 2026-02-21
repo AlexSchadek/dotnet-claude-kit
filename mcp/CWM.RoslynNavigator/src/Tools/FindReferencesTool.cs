@@ -1,11 +1,11 @@
 using System.ComponentModel;
 using System.Text.Json;
+using CWM.RoslynNavigator.Responses;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.FindSymbols;
 using ModelContextProtocol.Server;
-using CWM.RoslynNavigator.Responses;
 using RefLocation = CWM.RoslynNavigator.Responses.ReferenceLocation;
 
 namespace CWM.RoslynNavigator.Tools;

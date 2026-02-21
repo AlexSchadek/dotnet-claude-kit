@@ -1,8 +1,8 @@
+using CWM.RoslynNavigator;
 using Microsoft.Build.Locator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using CWM.RoslynNavigator;
 
 // MSBuild locator MUST be called before any Roslyn types are loaded.
 // This resolves the MSBuild instance needed by MSBuildWorkspace.

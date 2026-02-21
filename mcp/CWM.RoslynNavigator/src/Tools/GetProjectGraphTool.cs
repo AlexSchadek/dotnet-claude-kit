@@ -1,8 +1,8 @@
 using System.ComponentModel;
 using System.Text.Json;
 using System.Xml.Linq;
-using ModelContextProtocol.Server;
 using CWM.RoslynNavigator.Responses;
+using ModelContextProtocol.Server;
 
 namespace CWM.RoslynNavigator.Tools;
 

@@ -1,9 +1,9 @@
 using System.ComponentModel;
 using System.Text.Json;
-using Microsoft.CodeAnalysis;
-using ModelContextProtocol.Server;
 using CWM.RoslynNavigator.Analyzers;
 using CWM.RoslynNavigator.Responses;
+using Microsoft.CodeAnalysis;
+using ModelContextProtocol.Server;
 
 namespace CWM.RoslynNavigator.Tools;
 
