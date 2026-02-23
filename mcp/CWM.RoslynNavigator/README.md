@@ -84,9 +84,15 @@ dotnet run --project mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.csproj -- --sol
 
 The server resolves the solution file in this order:
 
-1. **Explicit `--solution` argument** — Pass a `.sln`/`.slnx` file path directly, or a directory to scan
-2. **Working directory scan** — If no argument, scans the current working directory for solution files
-3. **Deterministic selection** — If multiple solutions exist, prefers one in the root directory, otherwise picks the first alphabetically
+1. **Explicit `--solution` argument** — Pass a `.sln`/`.slnx` file path directly, or a directory to scan recursively
+2. **Working directory scan** — If no argument, scans the current working directory recursively for solution files
+3. **Deterministic selection** — Shallowest solution wins (BFS); within the same depth, alphabetical (case-insensitive) ordering is used
+
+### Recursive Search
+
+Discovery searches up to **3 levels deep** using breadth-first search, so a solution at `src/MyApp.sln` or `src/backend/Api/Api.sln` is found automatically.
+
+The following directories are skipped during scanning: `.git`, `.vs`, `.idea`, `node_modules`, `bin`, `obj`, `packages`, `artifacts`, `TestResults`, `.claude`.
 
 ## Architecture
 

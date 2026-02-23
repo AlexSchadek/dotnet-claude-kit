@@ -36,7 +36,11 @@ if (solutionPath is not null)
 }
 else
 {
-    logger.LogWarning("No solution file found. Tools will return not-ready status.");
+    logger.LogWarning(
+        "No .sln/.slnx file found in '{SearchDirectory}' (searched {MaxDepth} levels deep). " +
+        "Tools will return not-ready status. Use --solution <path> to specify explicitly.",
+        Directory.GetCurrentDirectory(),
+        SolutionDiscovery.MaxSearchDepth);
 }
 
 await app.RunAsync();
