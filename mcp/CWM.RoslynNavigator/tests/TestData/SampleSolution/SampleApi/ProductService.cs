@@ -24,7 +24,9 @@ public class ProductService
     {
         var result = await _repository.GetAllAsync(ct);
         // Intentional unused variable — generates CS0219 diagnostic for testing
+#pragma warning disable CS0219
         int unusedVariable = 42;
+#pragma warning restore CS0219
         return result;
     }
 }
