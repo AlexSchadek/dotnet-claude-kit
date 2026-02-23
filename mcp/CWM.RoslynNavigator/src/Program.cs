@@ -29,6 +29,9 @@ WorkspaceInitializer.SolutionPath = solutionPath;
 
 var app = builder.Build();
 
+var workspaceManager = app.Services.GetRequiredService<WorkspaceManager>();
+workspaceManager.Services = app.Services;
+
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
 if (solutionPath is not null)
 {

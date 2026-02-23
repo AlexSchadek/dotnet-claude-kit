@@ -15,8 +15,8 @@ public static class FindSymbolTool
         [Description("Filter by kind: 'type', 'class', 'interface', 'struct', 'enum', 'record', 'method', 'property', 'field', or 'any'")] string kind = "any",
         CancellationToken ct = default)
     {
-        if (workspace.State != WorkspaceState.Ready)
-            return JsonSerializer.Serialize(new StatusResponse(workspace.State.ToString(), workspace.GetStatusMessage()));
+        var notReady = await workspace.EnsureReadyOrStatusAsync(ct);
+        if (notReady is not null) return notReady;
 
         var symbols = await SymbolResolver.FindSymbolsByNameAsync(workspace, name, kind, ct);
 

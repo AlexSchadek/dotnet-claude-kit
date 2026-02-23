@@ -17,8 +17,8 @@ public static class FindOverridesTool
         [Description("Optional: containing class name to disambiguate")] string? className = null,
         CancellationToken ct = default)
     {
-        if (workspace.State != WorkspaceState.Ready)
-            return JsonSerializer.Serialize(new StatusResponse(workspace.State.ToString(), workspace.GetStatusMessage()));
+        var notReady = await workspace.EnsureReadyOrStatusAsync(ct);
+        if (notReady is not null) return notReady;
 
         var solution = workspace.GetSolution();
         if (solution is null)

@@ -16,8 +16,8 @@ public static class GetSymbolDetailTool
         [Description("Optional: containing type name for methods/properties")] string? containingType = null,
         CancellationToken ct = default)
     {
-        if (workspace.State != WorkspaceState.Ready)
-            return JsonSerializer.Serialize(new StatusResponse(workspace.State.ToString(), workspace.GetStatusMessage()));
+        var notReady = await workspace.EnsureReadyOrStatusAsync(ct);
+        if (notReady is not null) return notReady;
 
         var symbol = await SymbolResolver.ResolveSymbolAsync(workspace, symbolName, ct: ct);
 

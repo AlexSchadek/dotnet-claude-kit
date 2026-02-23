@@ -1,15 +1,3 @@
 {
-  "mcpServers": {
-    "cwm-roslyn-navigator": {
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "./mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.csproj",
-        "--",
-        "--solution",
-        "${workspaceFolder}"
-      ]
-    }
-  }
+  "mcpServers": {}
 }

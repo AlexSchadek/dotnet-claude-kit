@@ -16,8 +16,8 @@ public static class DetectCircularDependenciesTool
         [Description("Optional: project name filter (required for 'types' scope)")] string? projectFilter = null,
         CancellationToken ct = default)
     {
-        if (workspace.State != WorkspaceState.Ready)
-            return JsonSerializer.Serialize(new StatusResponse(workspace.State.ToString(), workspace.GetStatusMessage()));
+        var notReady = await workspace.EnsureReadyOrStatusAsync(ct);
+        if (notReady is not null) return notReady;
 
         var solution = workspace.GetSolution();
         if (solution is null)

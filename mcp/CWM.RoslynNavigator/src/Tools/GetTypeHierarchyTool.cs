@@ -16,8 +16,8 @@ public static class GetTypeHierarchyTool
         [Description("The type name to get the hierarchy for")] string typeName,
         CancellationToken ct = default)
     {
-        if (workspace.State != WorkspaceState.Ready)
-            return JsonSerializer.Serialize(new StatusResponse(workspace.State.ToString(), workspace.GetStatusMessage()));
+        var notReady = await workspace.EnsureReadyOrStatusAsync(ct);
+        if (notReady is not null) return notReady;
 
         var solution = workspace.GetSolution();
         if (solution is null)

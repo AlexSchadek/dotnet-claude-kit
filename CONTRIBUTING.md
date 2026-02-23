@@ -57,10 +57,10 @@ The MCP server at `mcp/CWM.RoslynNavigator/` provides semantic analysis tools.
 
 ```bash
 # Build
-dotnet build mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.csproj
+dotnet build mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.slnx
 
 # Run tests
-dotnet test mcp/CWM.RoslynNavigator/tests/CWM.RoslynNavigator.Tests.csproj
+dotnet test mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.slnx
 ```
 
 **MCP contribution guidelines:**
@@ -76,7 +76,7 @@ dotnet test mcp/CWM.RoslynNavigator/tests/CWM.RoslynNavigator.Tests.csproj
 3. Ensure all validations pass:
    - Skill frontmatter is valid
    - Skill files are under 400 lines
-   - MCP server builds: `dotnet build mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.csproj`
+   - MCP server builds: `dotnet build mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.slnx`
    - MCP tests pass: `dotnet test mcp/CWM.RoslynNavigator/tests/CWM.RoslynNavigator.Tests.csproj`
    - Code formatting: `dotnet format --verify-no-changes`
 4. Open a pull request with a clear description of changes

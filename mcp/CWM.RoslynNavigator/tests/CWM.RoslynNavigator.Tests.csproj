@@ -21,11 +21,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CWM.RoslynNavigator.csproj" />
+    <ProjectReference Include="..\src\CWM.RoslynNavigator.csproj" />
   </ItemGroup>
 
-  <!-- Include TestData as content so it's copied to output -->
+  <!-- TestData is loaded by Roslyn at runtime, not compiled as part of this project -->
   <ItemGroup>
+    <Compile Remove="TestData\**" />
     <None Include="TestData\**\*" CopyToOutputDirectory="PreserveNewest" LinkBase="TestData" />
   </ItemGroup>
 

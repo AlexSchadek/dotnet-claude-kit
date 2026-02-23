@@ -210,8 +210,9 @@ dotnet-claude-kit/
 ├── mcp/
 │   └── CWM.RoslynNavigator/
 │       ├── README.md                      # Setup, prerequisites, tool reference
-│       ├── CWM.RoslynNavigator.csproj
+│       ├── CWM.RoslynNavigator.slnx
 │       ├── src/
+│       │   ├── CWM.RoslynNavigator.csproj
 │       │   ├── Program.cs                 # MCP server entry point (stdio transport)
 │       │   ├── WorkspaceManager.cs        # MSBuildWorkspace lifecycle:
 │       │   │                              #   - Load once on startup, keep warm
@@ -557,7 +558,7 @@ Output: { "diagnostics": [{ "id": "CS8602", "severity": "warning", "message": "D
     "cwm-roslyn-navigator": {
       "type": "stdio",
       "command": "dotnet",
-      "args": ["run", "--project", "./mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.csproj", "--", "--solution", "${workspaceFolder}"],
+      "args": ["run", "--project", "./mcp/CWM.RoslynNavigator/src/CWM.RoslynNavigator.csproj", "--", "--solution", "${workspaceFolder}"],
       "description": "Token-efficient .NET codebase navigation via Roslyn semantic analysis"
     }
   }

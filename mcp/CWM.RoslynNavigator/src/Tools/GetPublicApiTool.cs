@@ -15,8 +15,8 @@ public static class GetPublicApiTool
         [Description("The type name to get the public API for")] string typeName,
         CancellationToken ct = default)
     {
-        if (workspace.State != WorkspaceState.Ready)
-            return JsonSerializer.Serialize(new StatusResponse(workspace.State.ToString(), workspace.GetStatusMessage()));
+        var notReady = await workspace.EnsureReadyOrStatusAsync(ct);
+        if (notReady is not null) return notReady;
 
         var symbol = await SymbolResolver.ResolveSymbolAsync(workspace, typeName, ct: ct);
         if (symbol is not INamedTypeSymbol typeSymbol)

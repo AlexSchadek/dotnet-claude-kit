@@ -49,4 +49,12 @@ public class WorkspaceManagerTests(TestSolutionFixture fixture) : IClassFixture<
 
         Assert.Equal("Workspace is ready.", message);
     }
+
+    [Fact]
+    public async Task EnsureReadyOrStatusAsync_ShouldReturnNull_WhenAlreadyReady()
+    {
+        var result = await fixture.WorkspaceManager.EnsureReadyOrStatusAsync(TestContext.Current.CancellationToken);
+
+        Assert.Null(result);
+    }
 }

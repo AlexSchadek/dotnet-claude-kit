@@ -71,10 +71,10 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore
-        run: dotnet restore mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.csproj
+        run: dotnet restore mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.slnx
 
       - name: Build
-        run: dotnet build mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.csproj --no-restore -c Release
+        run: dotnet build mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.slnx --no-restore -c Release
 
   test-mcp:
     name: Test MCP Server
@@ -113,7 +113,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore
-        run: dotnet restore mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.csproj
+        run: dotnet restore mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.slnx
 
       - name: Format check
-        run: dotnet format mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.csproj --verify-no-changes --no-restore
+        run: dotnet format mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.slnx --verify-no-changes --no-restore

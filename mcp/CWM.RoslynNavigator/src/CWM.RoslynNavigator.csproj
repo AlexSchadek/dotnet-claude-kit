@@ -15,7 +15,7 @@
 
     <!-- NuGet package metadata -->
     <PackageId>CWM.RoslynNavigator</PackageId>
-    <Version>0.5.2</Version>
+    <Version>0.6.0</Version>
     <Authors>Mukesh Murugan</Authors>
     <Company>codewithmukesh</Company>
     <Product>CWM.RoslynNavigator</Product>
@@ -37,12 +37,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="tests\**" />
-    <None Remove="tests\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>

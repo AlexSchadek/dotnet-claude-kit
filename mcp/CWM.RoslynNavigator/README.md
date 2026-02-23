@@ -36,10 +36,28 @@ CWM.RoslynNavigator is a Model Context Protocol (MCP) server that provides Claud
 ### As a Global Tool (Recommended)
 
 ```bash
+# Install once
 dotnet tool install -g CWM.RoslynNavigator
+
+# Register with Claude Code (no --solution needed!)
+claude mcp add --scope user cwm-roslyn-navigator -- cwm-roslyn-navigator
 ```
 
-Then add to your Claude Code global settings (`~/.claude/settings.json`):
+The server auto-discovers the solution from MCP workspace roots. No per-project configuration needed.
+
+You can also add it manually to your Claude Code global settings (`~/.claude/settings.json`):
+
+```json
+{
+  "mcpServers": {
+    "cwm-roslyn-navigator": {
+      "command": "cwm-roslyn-navigator"
+    }
+  }
+}
+```
+
+**Optional override**: Pass `--solution <path>` to specify a solution file or directory explicitly:
 
 ```json
 {
@@ -51,8 +69,6 @@ Then add to your Claude Code global settings (`~/.claude/settings.json`):
   }
 }
 ```
-
-The `--solution` argument accepts either a direct path to a `.sln`/`.slnx` file or a directory to scan for solution files.
 
 ### As a Local Tool (per-repo)
 
@@ -77,7 +93,7 @@ Then add to your project's `.mcp.json`:
 ### From Source (for contributors)
 
 ```bash
-dotnet run --project mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.csproj -- --solution /path/to/your/Solution.sln
+dotnet run --project mcp/CWM.RoslynNavigator/src/CWM.RoslynNavigator.csproj -- --solution /path/to/your/Solution.sln
 ```
 
 ## Solution Discovery
@@ -86,7 +102,8 @@ The server resolves the solution file in this order:
 
 1. **Explicit `--solution` argument** — Pass a `.sln`/`.slnx` file path directly, or a directory to scan recursively
 2. **Working directory scan** — If no argument, scans the current working directory recursively for solution files
-3. **Deterministic selection** — Shallowest solution wins (BFS); within the same depth, alphabetical (case-insensitive) ordering is used
+3. **MCP roots discovery** — On the first tool call, if no solution was found at startup, the server requests workspace roots from the MCP host (e.g., Claude Code) and scans those directories. This is a one-shot attempt — if no solution is found, it won't retry. This enables true zero-arg global tool operation.
+4. **Deterministic selection** — Shallowest solution wins (BFS); within the same depth, alphabetical (case-insensitive) ordering is used
 
 ### Recursive Search
 
@@ -118,14 +135,34 @@ Responses/              → Token-optimized JSON response DTOs
 
 ```bash
 # Build
-dotnet build mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.csproj
+dotnet build mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.slnx
 
 # Run tests
-dotnet test mcp/CWM.RoslynNavigator/tests/CWM.RoslynNavigator.Tests.csproj
+dotnet test mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.slnx
 
 # Run manually against a directory
-dotnet run --project mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.csproj -- --solution /path/to/your/project/
+dotnet run --project mcp/CWM.RoslynNavigator/src/CWM.RoslynNavigator.csproj -- --solution /path/to/your/project/
 
 # Run manually against a solution file
-dotnet run --project mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.csproj -- --solution /path/to/your/Solution.sln
+dotnet run --project mcp/CWM.RoslynNavigator/src/CWM.RoslynNavigator.csproj -- --solution /path/to/your/Solution.sln
 ```
+
+## Changelog
+
+### 0.6.0
+
+- **MCP roots discovery** — When no solution is found at startup, tools now request workspace roots from the MCP host on the first call and auto-discover the solution. One-shot, thread-safe attempt via `EnsureReadyOrStatusAsync`.
+- **Project restructured** — Source moved to `src/` and `tests/` layout with a new `.slnx` solution file.
+- **Unified readiness check** — All 15 tools use `EnsureReadyOrStatusAsync` instead of inline state checks, reducing boilerplate and ensuring consistent lazy-init behavior.
+
+### 0.5.2
+
+- Recursive solution discovery (BFS up to 3 levels deep).
+
+### 0.5.1
+
+- Expanded README with installation, architecture, and scaling docs.
+
+### 0.5.0
+
+- Initial NuGet release as a `dotnet tool`. 15 read-only Roslyn MCP tools.

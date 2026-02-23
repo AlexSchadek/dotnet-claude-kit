@@ -84,8 +84,8 @@ The MCP server lives at `mcp/CWM.RoslynNavigator/`. It's a .NET 10 application u
 ### Building
 
 ```bash
-dotnet build mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.csproj
-dotnet test mcp/CWM.RoslynNavigator/tests/CWM.RoslynNavigator.Tests.csproj
+dotnet build mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.slnx
+dotnet test mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.slnx
 ```
 
 ### Key Rules

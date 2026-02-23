@@ -1,7 +1,11 @@
 using System.Collections.Concurrent;
+using System.Text.Json;
+using CWM.RoslynNavigator.Responses;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace CWM.RoslynNavigator;
 
@@ -18,6 +22,7 @@ public sealed class WorkspaceManager : IDisposable
     private readonly ConcurrentDictionary<ProjectId, Compilation> _compilationCache = new();
     private readonly ConcurrentDictionary<ProjectId, long> _cacheAccessOrder = new();
     private long _accessCounter;
+    private int _rootsAttempted; // 0 = not tried, 1 = tried
     private readonly List<FileSystemWatcher> _watchers = [];
 
     private MSBuildWorkspace? _workspace;
@@ -29,6 +34,11 @@ public sealed class WorkspaceManager : IDisposable
     public string? ErrorMessage => _errorMessage;
     public int ProjectCount => _solution?.ProjectIds.Count ?? 0;
     public bool IsLazyLoading => ProjectCount > LazyLoadThreshold;
+
+    /// <summary>
+    /// Set by Program.cs after host build to allow lazy IMcpServer resolution.
+    /// </summary>
+    internal IServiceProvider? Services { get; set; }
 
     public WorkspaceManager(ILogger<WorkspaceManager> logger)
     {
@@ -169,6 +179,55 @@ public sealed class WorkspaceManager : IDisposable
         WorkspaceState.Ready => "Workspace is ready.",
         _ => "Unknown workspace state."
     };
+
+    /// <summary>
+    /// Returns null when the workspace is ready; otherwise attempts one-shot discovery
+    /// from MCP roots and returns a JSON status response if still not ready.
+    /// </summary>
+    public async Task<string?> EnsureReadyOrStatusAsync(CancellationToken ct)
+    {
+        if (State == WorkspaceState.Ready) return null;
+
+        // One-shot attempt to discover workspace from MCP roots
+        if (Interlocked.CompareExchange(ref _rootsAttempted, 1, 0) == 0)
+        {
+            await TryInitializeFromRootsAsync(ct);
+            if (State == WorkspaceState.Ready) return null;
+        }
+
+        return JsonSerializer.Serialize(new StatusResponse(State.ToString(), GetStatusMessage()));
+    }
+
+    private async Task TryInitializeFromRootsAsync(CancellationToken ct)
+    {
+        try
+        {
+            var server = Services?.GetService(typeof(IMcpServer)) as IMcpServer;
+            if (server is null) return;
+
+            var rootsResult = await server.RequestRootsAsync(new ListRootsRequestParams(), ct);
+            foreach (var root in rootsResult.Roots)
+            {
+                if (!Uri.TryCreate(root.Uri, UriKind.Absolute, out var uri)) continue;
+                var localPath = uri.LocalPath;
+                if (!Directory.Exists(localPath)) continue;
+
+                var solutionPath = SolutionDiscovery.FindSolutionPath([], localPath);
+                if (solutionPath is not null)
+                {
+                    _logger.LogInformation("Discovered solution from MCP roots: {SolutionPath}", solutionPath);
+                    await LoadSolutionAsync(solutionPath, ct);
+                    return;
+                }
+            }
+
+            _logger.LogWarning("MCP roots available but no .sln/.slnx found in any root directory.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to discover workspace from MCP roots.");
+        }
+    }
 
     private async Task WarmCompilationsAsync(CancellationToken ct)
     {

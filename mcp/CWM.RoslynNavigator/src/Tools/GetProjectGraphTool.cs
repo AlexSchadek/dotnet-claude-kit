@@ -10,17 +10,16 @@ namespace CWM.RoslynNavigator.Tools;
 public static class GetProjectGraphTool
 {
     [McpServerTool(Name = "get_project_graph"), Description("Get the solution project dependency tree with names, paths, target frameworks, and project references.")]
-    public static Task<string> ExecuteAsync(
+    public static async Task<string> ExecuteAsync(
         WorkspaceManager workspace,
         CancellationToken ct = default)
     {
-        if (workspace.State != WorkspaceState.Ready)
-            return Task.FromResult(JsonSerializer.Serialize(
-                new StatusResponse(workspace.State.ToString(), workspace.GetStatusMessage())));
+        var notReady = await workspace.EnsureReadyOrStatusAsync(ct);
+        if (notReady is not null) return notReady;
 
         var solution = workspace.GetSolution();
         if (solution is null)
-            return Task.FromResult(JsonSerializer.Serialize(new ProjectGraphResult("unknown", [])));
+            return JsonSerializer.Serialize(new ProjectGraphResult("unknown", []));
 
         var projects = solution.Projects.Select(project =>
         {
@@ -41,7 +40,7 @@ public static class GetProjectGraphTool
             ? Path.GetFileName(solution.FilePath)
             : "unknown";
 
-        return Task.FromResult(JsonSerializer.Serialize(new ProjectGraphResult(solutionName, projects)));
+        return JsonSerializer.Serialize(new ProjectGraphResult(solutionName, projects));
     }
 
     private static string DetectTargetFramework(Microsoft.CodeAnalysis.Project project)
