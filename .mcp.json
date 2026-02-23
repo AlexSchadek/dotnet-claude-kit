@@ -1,3 +1,7 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "cwm-roslyn-navigator": {
+      "command": "cwm-roslyn-navigator"
+    }
+  }
 }

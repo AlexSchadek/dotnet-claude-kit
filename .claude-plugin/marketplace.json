@@ -1,10 +1,12 @@
 {
   "name": "dotnet-claude-kit",
   "owner": {
-    "name": "Mukesh Murugan"
+    "name": "Mukesh Murugan",
+    "url": "https://codewithmukesh.com"
   },
   "metadata": {
-    "description": "The definitive Claude Code companion for .NET developers"
+    "description": "The definitive Claude Code companion for .NET developers",
+    "repository": "https://github.com/codewithmukesh/dotnet-claude-kit"
   },
   "plugins": [
     {

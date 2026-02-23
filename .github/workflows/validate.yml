@@ -59,6 +59,85 @@ jobs:
           fi
           echo "All skills validated successfully"
 
+  validate-plugin:
+    name: Validate Plugin Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate JSON syntax
+        run: |
+          errors=0
+          for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json .mcp.json hooks/hooks.json; do
+            if ! python3 -m json.tool "$f" > /dev/null 2>&1; then
+              echo "ERROR: $f is not valid JSON"
+              errors=$((errors + 1))
+            else
+              echo "OK: $f"
+            fi
+          done
+          if [ $errors -gt 0 ]; then
+            echo "$errors JSON error(s) found"
+            exit 1
+          fi
+
+      - name: Validate plugin.json required keys
+        run: |
+          errors=0
+          for key in name version description skills agents hooks mcpServers; do
+            if ! python3 -c "import json,sys; d=json.load(open('.claude-plugin/plugin.json')); assert '$key' in d" 2>/dev/null; then
+              echo "ERROR: plugin.json missing required key '$key'"
+              errors=$((errors + 1))
+            fi
+          done
+          if [ $errors -gt 0 ]; then
+            exit 1
+          fi
+          echo "plugin.json keys validated"
+
+      - name: Validate component paths exist
+        run: |
+          errors=0
+          for path in skills/ agents/ hooks/hooks.json .mcp.json; do
+            if [ ! -e "$path" ]; then
+              echo "ERROR: plugin.json references '$path' but it does not exist"
+              errors=$((errors + 1))
+            fi
+          done
+          if [ $errors -gt 0 ]; then
+            exit 1
+          fi
+          echo "All component paths exist"
+
+      - name: Validate .mcp.json has server entries
+        run: |
+          count=$(python3 -c "import json; d=json.load(open('.mcp.json')); print(len(d.get('mcpServers',{})))")
+          if [ "$count" -eq 0 ]; then
+            echo "ERROR: .mcp.json has no MCP server entries"
+            exit 1
+          fi
+          echo ".mcp.json has $count server(s)"
+
+      - name: Validate hooks.json structure
+        run: |
+          python3 -c "
+          import json, sys
+          d = json.load(open('hooks/hooks.json'))
+          hooks = d.get('hooks', {})
+          if not hooks:
+              print('ERROR: hooks.json has no hook events')
+              sys.exit(1)
+          for event, entries in hooks.items():
+              for entry in entries:
+                  if 'matcher' not in entry:
+                      print(f'ERROR: {event} entry missing matcher')
+                      sys.exit(1)
+                  if 'hooks' not in entry or not entry['hooks']:
+                      print(f'ERROR: {event} matcher \"{entry[\"matcher\"]}\" has no hooks')
+                      sys.exit(1)
+          print('hooks.json structure validated')
+          "
+
   build-mcp:
     name: Build MCP Server
     runs-on: ubuntu-latest

@@ -71,31 +71,21 @@ v0.4.0 adds an **action layer** on top of the knowledge layer — Claude doesn't
 
 ## Installation
 
-### One-Time Global Setup
+### Plugin Install (Recommended)
 
-Install the Roslyn MCP server as a global tool and register it with Claude Code. Run once — works in every .NET project:
+Install as a Claude Code plugin — all 40 skills, 8 agents, hooks, and MCP config activate globally and auto-update:
 
 ```bash
-# 1. Install the MCP server globally
+# 1. Install the Roslyn MCP server as a global .NET tool
 dotnet tool install -g CWM.RoslynNavigator
 
-# 2. Register it in Claude Code at user scope (available in ALL projects)
-claude mcp add --scope user cwm-roslyn-navigator -- cwm-roslyn-navigator --solution ${workspaceFolder}
+# 2. Install the plugin
+/install-plugin codewithmukesh/dotnet-claude-kit
 ```
 
 ### Per-Project Setup
 
 Copy the template that matches your project type into your project root:
-
-```bash
-# Clone the kit (or download just the template you need)
-git clone https://github.com/codewithmukesh/dotnet-claude-kit.git
-
-# Copy the right template
-cp dotnet-claude-kit/templates/web-api/CLAUDE.md ./your-project/CLAUDE.md
-```
-
-### Available Templates
 
 ```bash
 cp templates/web-api/CLAUDE.md ./CLAUDE.md           # REST API
@@ -108,6 +98,27 @@ cp templates/class-library/CLAUDE.md ./CLAUDE.md       # NuGet packages
 Customize — replace `[ProjectName]`, update tech stack, choose your architecture. Start Claude Code — 40 skills, 8 agents, and 15 MCP tools activate automatically.
 
 That's it. Claude now writes .NET code the way a senior .NET engineer would.
+
+<details>
+<summary><strong>Manual Install (Alternative)</strong></summary>
+
+If you prefer to clone the repo and wire things up manually:
+
+```bash
+# 1. Install the MCP server globally
+dotnet tool install -g CWM.RoslynNavigator
+
+# 2. Register it in Claude Code at user scope (available in ALL projects)
+claude mcp add --scope user cwm-roslyn-navigator -- cwm-roslyn-navigator --solution ${workspaceFolder}
+
+# 3. Clone the kit
+git clone https://github.com/codewithmukesh/dotnet-claude-kit.git
+
+# 4. Copy the right template into your project
+cp dotnet-claude-kit/templates/web-api/CLAUDE.md ./your-project/CLAUDE.md
+```
+
+</details>
 
 ## What You Get
 

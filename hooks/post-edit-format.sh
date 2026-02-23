@@ -2,12 +2,22 @@
 # Post-edit hook: auto-format changed .cs files
 # Runs dotnet format on specific files after Claude edits them.
 #
-# Usage: Called automatically by Claude Code after editing .cs files.
-# Expects the edited file path as the first argument or via CLAUDE_EDITED_FILE env var.
+# Usage:
+#   Called automatically by Claude Code PostToolUse hook after Edit/Write on .cs files.
+#   Accepts file path via:
+#     1. First argument ($1)
+#     2. CLAUDE_EDITED_FILE env var
+#     3. PostToolUse stdin JSON ({"tool_input":{"file_path":"..."}})
 
 set -euo pipefail
 
 FILE="${1:-${CLAUDE_EDITED_FILE:-}}"
+
+# Fallback: parse file_path from PostToolUse stdin JSON
+if [[ -z "$FILE" ]] && [[ ! -t 0 ]]; then
+    STDIN=$(cat)
+    FILE=$(echo "$STDIN" | grep -o '"file_path" *: *"[^"]*"' | head -1 | grep -o '"[^"]*"$' | tr -d '"') || true
+fi
 
 if [[ -z "$FILE" ]]; then
     exit 0

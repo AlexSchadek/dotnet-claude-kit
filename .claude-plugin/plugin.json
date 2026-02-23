@@ -19,5 +19,9 @@
     "vertical-slice",
     "scaffolding",
     "code-review"
-  ]
+  ],
+  "skills": "./skills/",
+  "agents": "./agents/",
+  "hooks": "./hooks/hooks.json",
+  "mcpServers": "./.mcp.json"
 }
