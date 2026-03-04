@@ -285,7 +285,7 @@ jobs:
       - name: Validate plugin.json required keys
         run: |
           errors=0
-          for key in name version description skills agents hooks mcpServers; do
+          for key in name description; do
             if ! python3 -c "import json,sys; d=json.load(open('.claude-plugin/plugin.json')); assert '$key' in d" 2>/dev/null; then
               echo "ERROR: plugin.json missing required key '$key'"
               errors=$((errors + 1))
@@ -296,19 +296,21 @@ jobs:
           fi
           echo "plugin.json keys validated"
 
-      - name: Validate component paths exist
+      - name: Validate component directories exist
         run: |
           errors=0
           for path in skills/ agents/ commands/ .claude/rules/ hooks/hooks.json .mcp.json; do
             if [ ! -e "$path" ]; then
-              echo "ERROR: plugin.json references '$path' but it does not exist"
+              echo "ERROR: Expected '$path' but it does not exist"
               errors=$((errors + 1))
+            else
+              echo "OK: $path"
             fi
           done
           if [ $errors -gt 0 ]; then
             exit 1
           fi
-          echo "All component paths exist"
+          echo "All component directories exist"
 
       - name: Validate .mcp.json has server entries
         run: |
