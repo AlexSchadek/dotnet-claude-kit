@@ -225,19 +225,18 @@ jobs:
         run: |
           errors=0
           # Extract script paths from hooks.json
-          scripts=$(python3 -c "
+          scripts=$(python3 << 'PYEOF'
           import json, re
           d = json.load(open('hooks/hooks.json'))
           for event, entries in d.get('hooks', {}).items():
               for entry in entries:
                   for hook in entry.get('hooks', []):
                       cmd = hook.get('command', '')
-                      # Extract .sh file references
-                      for match in re.findall(r'[\w/.-]+\.sh', cmd):
-                          # Resolve CLAUDE_PLUGIN_ROOT to current dir
-                          resolved = match.replace('\${CLAUDE_PLUGIN_ROOT}/', '')
-                          print(resolved)
-          ")
+                      clean = cmd.replace('${CLAUDE_PLUGIN_ROOT}/', '')
+                      for match in re.findall(r'[\w][\w/.-]*\.sh', clean):
+                          print(match)
+          PYEOF
+          )
 
           for script in $scripts; do
             if [ ! -f "$script" ]; then
