@@ -18,17 +18,27 @@ description: >
 4. **Modern C# 14 patterns** — Primary constructors, collection expressions, `file`-scoped types, records for DTOs, `sealed` on all handler classes.
 5. **Convention-matching** — Before generating, check existing code for naming patterns (`*Handler`, `*Service`, `*Endpoint`), folder structure, and access modifiers. Match what exists.
 
+### Scaffold Checklist (MANDATORY)
+
+Every scaffolded feature MUST include ALL of the following. Do not skip any item:
+
+- [ ] **CancellationToken** on every async method and passed to every async call
+- [ ] **FluentValidation** validator class with meaningful rules (ranges, required fields, max lengths)
+- [ ] **ValidationFilter wiring** — `.AddEndpointFilter<ValidationFilter<T>>()` on mutating endpoints
+- [ ] **OpenAPI metadata** — `.WithName()`, `.WithSummary()`, `.Produces<T>()`, `.ProducesValidationProblem()`, `.ProducesProblem(404)`
+- [ ] **Pagination** on list endpoints — `page`, `pageSize` with bounded max (e.g., 50)
+- [ ] **Global error handler** — Verify `app.UseExceptionHandler()` + `IExceptionHandler` exists in Program.cs; scaffold it if missing
+- [ ] **appsettings.json** — Verify connection string exists; scaffold it with placeholder if missing
+- [ ] **Integration test** with proper DI replacement using `services.RemoveAll<DbContextOptions<T>>()`
+
 ## Patterns
 
 ### Feature Scaffold — Vertical Slice Architecture (VSA)
 
-Single-file feature with command, handler, response, and endpoint mapping:
+Single-file feature with command, handler, validator, and response:
 
 ```csharp
 // Features/Orders/CreateOrder.cs
-using FluentValidation;
-using Microsoft.AspNetCore.Http.HttpResults;
-
 namespace MyApp.Features.Orders;
 
 public static class CreateOrder
@@ -56,81 +66,102 @@ public static class CreateOrder
             RuleFor(x => x.Items).NotEmpty();
             RuleForEach(x => x.Items).ChildRules(item =>
             {
-                item.RuleFor(x => x.Quantity).GreaterThan(0);
+                item.RuleFor(x => x.Quantity).InclusiveBetween(1, 1000);
                 item.RuleFor(x => x.UnitPrice).GreaterThan(0);
             });
         }
     }
 }
+```
 
+Endpoint group with full OpenAPI metadata, validation filter, and pagination:
+
+```csharp
 // Features/Orders/OrderEndpoints.cs — auto-discovered via IEndpointGroup
 public sealed class OrderEndpoints : IEndpointGroup
 {
     public void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/orders").WithTags("Orders");
-        group.MapPost("/", async (CreateOrder.Command cmd, CreateOrder.Handler handler, CancellationToken ct) =>
-        {
-            var response = await handler.HandleAsync(cmd, ct);
-            return TypedResults.Created($"/api/orders/{response.Id}", response);
-        });
+
+        group.MapPost("/", CreateOrderHandler)
+            .WithName("CreateOrder")
+            .WithSummary("Create a new order")
+            .Produces<CreateOrder.Response>(StatusCodes.Status201Created)
+            .ProducesValidationProblem()
+            .AddEndpointFilter<ValidationFilter<CreateOrder.Command>>();
+
+        group.MapGet("/", ListOrdersHandler)
+            .WithName("ListOrders")
+            .WithSummary("List orders with pagination")
+            .Produces<PagedList<OrderSummary>>();
+
+        group.MapGet("/{id:guid}", GetOrderHandler)
+            .WithName("GetOrder")
+            .Produces<OrderDetail>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
+    }
+
+    private static async Task<Created<CreateOrder.Response>> CreateOrderHandler(
+        CreateOrder.Command cmd, CreateOrder.Handler handler, CancellationToken ct)
+    {
+        var response = await handler.HandleAsync(cmd, ct);
+        return TypedResults.Created($"/api/orders/{response.Id}", response);
+    }
+
+    private static async Task<Ok<PagedList<OrderSummary>>> ListOrdersHandler(
+        [AsParameters] PaginationQuery paging, AppDbContext db, CancellationToken ct)
+    {
+        var query = db.Orders.OrderByDescending(o => o.CreatedAt);
+        var total = await query.CountAsync(ct);
+        var items = await query.Skip((paging.Page - 1) * paging.PageSize).Take(paging.PageSize)
+            .Select(o => new OrderSummary(o.Id, o.Total, o.CreatedAt)).ToListAsync(ct);
+        return TypedResults.Ok(new PagedList<OrderSummary>(items, total, paging.Page, paging.PageSize));
+    }
+
+    private static async Task<Results<Ok<OrderDetail>, NotFound>> GetOrderHandler(
+        Guid id, AppDbContext db, CancellationToken ct)
+    {
+        var order = await db.Orders.Where(o => o.Id == id)
+            .Select(o => new OrderDetail(o.Id, o.CustomerId, o.Total, o.CreatedAt)).FirstOrDefaultAsync(ct);
+        return order is not null ? TypedResults.Ok(order) : TypedResults.NotFound();
     }
 }
+
+// Common/PaginationQuery.cs
+public record PaginationQuery(int Page = 1, int PageSize = 20)
+{
+    public int Page { get; init; } = Math.Max(1, Page);
+    public int PageSize { get; init; } = Math.Clamp(PageSize, 1, 50);
+}
+
+public record PagedList<T>(List<T> Items, int TotalCount, int Page, int PageSize);
+```
 ```
 
 ### Feature Scaffold — Clean Architecture (CA)
 
-Separate files across layers:
+Separate files across layers. Domain → Application (Command + Handler + Validator) → Api (Endpoint):
 
-```csharp
-// Domain/Entities/Order.cs
-namespace MyApp.Domain.Entities;
-
-public sealed class Order
-{
-    public Guid Id { get; private set; }
-    public string CustomerId { get; private set; } = string.Empty;
-    public decimal Total { get; private set; }
-    public DateTimeOffset CreatedAt { get; private set; }
-    public List<OrderItem> Items { get; private set; } = [];
-
-    public static Order Create(string customerId, List<OrderItem> items, DateTimeOffset now)
-    {
-        var order = new Order { Id = Guid.NewGuid(), CustomerId = customerId, Items = items, CreatedAt = now };
-        order.Total = items.Sum(i => i.UnitPrice * i.Quantity);
-        return order;
-    }
-}
-```
 ```csharp
 // Application/Orders/CreateOrder/CreateOrderCommand.cs
-namespace MyApp.Application.Orders.CreateOrder;
-
 public record CreateOrderCommand(string CustomerId, List<OrderItemDto> Items) : IRequest<Result<CreateOrderResponse>>;
-public record OrderItemDto(Guid ProductId, int Quantity, decimal UnitPrice);
 public record CreateOrderResponse(Guid Id, decimal Total, DateTimeOffset CreatedAt);
-```
-```csharp
-// Application/Orders/CreateOrder/CreateOrderHandler.cs
-namespace MyApp.Application.Orders.CreateOrder;
 
+// Application/Orders/CreateOrder/CreateOrderHandler.cs
 internal sealed class CreateOrderHandler(IAppDbContext db, TimeProvider clock)
     : IRequestHandler<CreateOrderCommand, Result<CreateOrderResponse>>
 {
     public async Task<Result<CreateOrderResponse>> Handle(CreateOrderCommand request, CancellationToken ct)
     {
-        var items = request.Items.Select(i => new OrderItem(i.ProductId, i.Quantity, i.UnitPrice)).ToList();
-        var order = Order.Create(request.CustomerId, items, clock.GetUtcNow());
+        var order = Order.Create(request.CustomerId, request.Items, clock.GetUtcNow());
         db.Orders.Add(order);
         await db.SaveChangesAsync(ct);
         return new CreateOrderResponse(order.Id, order.Total, order.CreatedAt);
     }
 }
-```
-```csharp
-// Api/Endpoints/OrderEndpoints.cs — implements IEndpointGroup for auto-discovery
-namespace MyApp.Api.Endpoints;
 
+// Api/Endpoints/OrderEndpoints.cs — auto-discovered via IEndpointGroup
 public sealed class OrderEndpoints : IEndpointGroup
 {
     public void Map(IEndpointRouteBuilder app)
@@ -139,30 +170,29 @@ public sealed class OrderEndpoints : IEndpointGroup
         group.MapPost("/", async (CreateOrderCommand cmd, ISender sender, CancellationToken ct) =>
         {
             var result = await sender.Send(cmd, ct);
-            return result.Match(
-                success => TypedResults.Created($"/api/orders/{success.Id}", success),
-                error => Results.Problem(error.Message, statusCode: 400));
-        });
+            return result.IsSuccess
+                ? TypedResults.Created($"/api/orders/{result.Value.Id}", result.Value)
+                : result.ToProblemDetails();
+        })
+        .WithName("CreateOrder").Produces<CreateOrderResponse>(201)
+        .ProducesValidationProblem()
+        .AddEndpointFilter<ValidationFilter<CreateOrderCommand>>();
     }
 }
 ```
 
 ### Feature Scaffold — DDD
 
-Aggregate method + application handler — domain logic lives in the aggregate:
+Domain logic lives in the aggregate; handler orchestrates persistence:
 
 ```csharp
-// Domain/Orders/Order.cs — Aggregate root
-namespace MyApp.Domain.Orders;
-
+// Domain/Orders/Order.cs — Aggregate root with invariant enforcement
 public sealed class Order : AggregateRoot
 {
     private readonly List<OrderItem> _items = [];
     public IReadOnlyList<OrderItem> Items => _items.AsReadOnly();
     public decimal Total { get; private set; }
     public OrderStatus Status { get; private set; }
-
-    private Order() { }
 
     public static Order Place(string customerId, List<(Guid ProductId, int Qty, decimal Price)> items, DateTimeOffset now)
     {
@@ -174,28 +204,18 @@ public sealed class Order : AggregateRoot
         order.AddDomainEvent(new OrderPlacedEvent(order.Id, customerId, order.Total, now));
         return order;
     }
-
-    public void Cancel()
-    {
-        if (Status is OrderStatus.Shipped or OrderStatus.Delivered)
-            throw new DomainException("Cannot cancel a shipped or delivered order.");
-        Status = OrderStatus.Cancelled;
-        AddDomainEvent(new OrderCancelledEvent(Id));
-    }
 }
 ```
 
 ### Feature Scaffold — Modular Monolith
-Feature within a module boundary with its own DbContext:
+
+Feature within a module boundary with its own DbContext. Handler passes `CancellationToken`, publishes integration events:
 
 ```csharp
 // Modules/Orders/Features/PlaceOrder.cs
-namespace MyApp.Modules.Orders.Features;
-
 public static class PlaceOrder
 {
     public record Command(string CustomerId, List<ItemDto> Items);
-    public record ItemDto(Guid ProductId, int Quantity, decimal UnitPrice);
     public record Response(Guid OrderId, decimal Total);
 
     internal sealed class Handler(OrdersDbContext db, TimeProvider clock, IEventBus bus)
@@ -213,37 +233,22 @@ public static class PlaceOrder
 ```
 
 ### Entity Scaffold
-Entity + EF Core `IEntityTypeConfiguration<T>` — always paired:
+Always pair entity + `IEntityTypeConfiguration<T>`. No data annotations on entities.
 
 ```csharp
-// Domain/Entities/Product.cs (or within module)
-namespace MyApp.Domain.Entities;
-
+// Domain/Entities/Product.cs — clean, no attributes
 public sealed class Product
 {
     public Guid Id { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public string Sku { get; private set; } = string.Empty;
     public decimal Price { get; private set; }
-    public bool IsActive { get; private set; } = true;
 
     public static Product Create(string name, string sku, decimal price) =>
         new() { Id = Guid.NewGuid(), Name = name, Sku = sku, Price = price };
-
-    public void UpdatePrice(decimal newPrice)
-    {
-        if (newPrice <= 0) throw new ArgumentOutOfRangeException(nameof(newPrice));
-        Price = newPrice;
-    }
 }
-```
-```csharp
-// Infrastructure/Persistence/Configurations/ProductConfiguration.cs
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace MyApp.Infrastructure.Persistence.Configurations;
-
+// Persistence/Configurations/ProductConfiguration.cs — all EF config here
 internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 {
     public void Configure(EntityTypeBuilder<Product> builder)
@@ -257,86 +262,86 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 }
 ```
 
-After creating entity + config, run: `dotnet ef migrations add AddProduct --project src/Infrastructure --startup-project src/Api`
+After creating entity + config: `dotnet ef migrations add AddProduct`
 
 ### Test Scaffold
-Integration test with WebApplicationFactory + Testcontainers:
+Integration test with proper DI replacement (RemoveAll, not fragile name matching):
 
 ```csharp
-// Tests/Features/Orders/CreateOrderTests.cs
-namespace MyApp.Tests.Features.Orders;
-
-public sealed class CreateOrderTests(TestWebAppFactory factory) : IClassFixture<TestWebAppFactory>
+// Tests/Fixtures/ApiFixture.cs
+public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly HttpClient _client = factory.CreateClient();
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder().WithImage("postgres:17").Build();
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.ConfigureServices(services =>
+        {
+            services.RemoveAll<DbContextOptions<AppDbContext>>();
+            services.AddDbContext<AppDbContext>(o => o.UseNpgsql(_postgres.GetConnectionString()));
+        });
+    }
+
+    public async Task InitializeAsync() { await _postgres.StartAsync(); /* apply migrations */ }
+    public new async Task DisposeAsync() { await _postgres.DisposeAsync(); await base.DisposeAsync(); }
+}
+```
+```csharp
+// Tests/Features/Orders/CreateOrderTests.cs
+public sealed class CreateOrderTests(ApiFixture fixture) : IClassFixture<ApiFixture>
+{
+    private readonly HttpClient _client = fixture.CreateClient();
 
     [Fact]
     public async Task CreateOrder_ValidRequest_Returns201()
     {
         // Arrange
         var command = new { CustomerId = "CUST-001", Items = new[] { new { ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 29.99m } } };
-
         // Act
         var response = await _client.PostAsJsonAsync("/api/orders", command);
-
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var result = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.NotEqual(Guid.Empty, result.GetProperty("id").GetGuid());
-        Assert.True(result.GetProperty("total").GetDecimal() > 0);
     }
 
     [Fact]
-    public async Task CreateOrder_EmptyItems_Returns400()
+    public async Task CreateOrder_EmptyItems_ReturnsValidationProblem()
     {
-        var command = new { CustomerId = "CUST-001", Items = Array.Empty<object>() };
-
-        var response = await _client.PostAsJsonAsync("/api/orders", command);
-
+        var response = await _client.PostAsJsonAsync("/api/orders", new { CustomerId = "CUST-001", Items = Array.Empty<object>() });
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 }
 ```
 
 ### Module Scaffold (Modular Monolith)
-Complete module setup with its own DbContext, DI, and integration events:
+Module = DI registration class + `IEndpointGroup` endpoints + own DbContext with isolated schema:
 
 ```csharp
-// Modules/Inventory/InventoryModule.cs — DI registration only
-namespace MyApp.Modules.Inventory;
-
+// Modules/Inventory/InventoryModule.cs — DI only, no endpoint wiring
 public static class InventoryModule
 {
     public static IServiceCollection AddInventoryModule(this IServiceCollection services, IConfiguration config)
     {
-        services.AddDbContext<InventoryDbContext>(options =>
-            options.UseNpgsql(config.GetConnectionString("Inventory")));
-        services.AddScoped<StockService>();
+        services.AddDbContext<InventoryDbContext>(o => o.UseNpgsql(config.GetConnectionString("Inventory")));
         return services;
     }
 }
-```
-```csharp
-// Modules/Inventory/Endpoints/InventoryEndpoints.cs — auto-discovered via IEndpointGroup
-namespace MyApp.Modules.Inventory.Endpoints;
 
+// Modules/Inventory/Endpoints/InventoryEndpoints.cs — auto-discovered via IEndpointGroup
 public sealed class InventoryEndpoints : IEndpointGroup
 {
     public void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/inventory").WithTags("Inventory");
-        // Map module-specific endpoints here
+        // endpoint definitions with full OpenAPI metadata + ValidationFilter
     }
 }
-```
-```csharp
-// Modules/Inventory/Persistence/InventoryDbContext.cs
-namespace MyApp.Modules.Inventory.Persistence;
 
+// Modules/Inventory/Persistence/InventoryDbContext.cs — isolated schema
 internal sealed class InventoryDbContext(DbContextOptions<InventoryDbContext> options) : DbContext(options)
 {
     public DbSet<StockItem> StockItems => Set<StockItem>();
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("inventory");
@@ -392,5 +397,4 @@ public record ProductSummary(Guid Id, string Name, decimal Price);
 | Feature in a module | Modular Monolith | Feature file in Modules/{Name}/Features/ with module DbContext |
 | New entity | Any | Entity class + `IEntityTypeConfiguration<T>` + migration |
 | New module | Modular Monolith | Module folder + DbContext + DI registration + integration events |
-| Tests for feature | Any | Integration test with `WebApplicationFactory` + `Testcontainers` |
 | Architecture unknown | Any | **Ask first** — run architecture-advisor questionnaire |

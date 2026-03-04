@@ -28,11 +28,11 @@ description: >
 
 ## Exception Handling Boundaries
 
+- **DO** verify `app.UseExceptionHandler()` + `IExceptionHandler` (or inline handler) exists in Program.cs for EVERY web project. If missing, scaffold it immediately.
+  Rationale: Without a global handler, unhandled exceptions leak stack traces in production.
+
 - **DON'T** catch bare `Exception` unless at the application boundary (middleware/top-level handler).
   Rationale: Broad catches swallow bugs silently. Only the outermost layer should catch everything.
-
-- **DO** use `IExceptionHandler` middleware for unhandled exceptions.
-  Rationale: Centralizes error logging and ProblemDetails conversion in one place.
 
 - **DON'T** catch and rethrow without adding context. Either handle it or let it propagate.
   Rationale: Catch-and-rethrow without value destroys stack traces and adds noise.
