@@ -214,3 +214,5 @@ Claude reads it at session start and applies rules proactively
 | Rule contradicts an existing rule | Keep the most recent correction, remove the old one |
 | Correction is about a one-time task | Don't store — only capture reusable patterns |
 | User asks to forget a rule | Remove it from MEMORY.md immediately |
+| Pattern observed but not yet confirmed | Create an instinct via `instinct-system` skill (confidence 0.3) instead of a MEMORY.md rule |
+| Instinct reaches 0.9 confidence | Promote to MEMORY.md as a permanent rule (see `instinct-system` skill) |

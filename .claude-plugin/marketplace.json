@@ -12,14 +12,16 @@
     {
       "name": "dotnet-claude-kit",
       "source": "./",
-      "description": "40 skills, 8 agents, 5 templates, Roslyn MCP server for .NET 10 / C# 14",
-      "version": "0.5.0",
+      "description": "47 skills, 10 agents, 15 commands, 9 rules, 5 templates, Roslyn MCP server for .NET 10 / C# 14",
+      "version": "0.6.0",
       "license": "MIT",
       "keywords": [
         "dotnet",
         "csharp",
         "aspnet",
-        "efcore"
+        "efcore",
+        "slash-commands",
+        "rules"
       ]
     }
   ]

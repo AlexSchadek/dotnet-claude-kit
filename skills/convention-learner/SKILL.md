@@ -268,3 +268,5 @@ var for obvious cases (e.g., new MyClass()). Confirmed across 5 files."
 | New team member onboarding | Run detection, generate convention doc | Full detection flow |
 | .editorconfig exists | Trust it, don't override | Read .editorconfig |
 | No .editorconfig | Suggest creating one based on detected patterns | Detection + generation |
+| Pattern seen once | Create instinct at 0.3 confidence via `instinct-system` skill | instinct-system |
+| Pattern confirmed 3+ times | Instinct auto-promotes to 0.7, suggest adding to CLAUDE.md | instinct-system |

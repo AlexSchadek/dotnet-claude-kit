@@ -51,6 +51,26 @@ Each template needs:
 - `CLAUDE.md` — The drop-in file with project context, skills references, commands
 - `README.md` — When and how to use the template
 
+### Commands
+
+Commands in `commands/` are lightweight orchestrators that invoke skills and agents.
+
+**Command requirements:**
+- YAML frontmatter with `description`
+- Required sections: What, When, How, Example, Related
+- Maximum 200 lines
+- Commands invoke skills/agents — they don't contain the logic themselves
+
+### Rules
+
+Rules in `rules/dotnet/` are always-loaded conventions.
+
+**Rule requirements:**
+- YAML frontmatter with `alwaysApply: true` and `description`
+- Maximum 100 lines (rules are always in context — every line costs tokens)
+- Prescriptive DO/DON'T format with brief rationale for each rule
+- All rules combined should stay under ~600 lines total
+
 ### Roslyn MCP Server
 
 The MCP server at `mcp/CWM.RoslynNavigator/` provides semantic analysis tools.

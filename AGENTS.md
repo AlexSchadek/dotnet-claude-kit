@@ -14,6 +14,8 @@
 | performance-analyst | `agents/performance-analyst.md` | Benchmarks, memory, async patterns, caching |
 | devops-engineer | `agents/devops-engineer.md` | Docker, CI/CD, Aspire, deployment |
 | code-reviewer | `agents/code-reviewer.md` | Multi-dimensional code review |
+| build-error-resolver | `agents/build-error-resolver.md` | Autonomous build error fixing |
+| refactor-cleaner | `agents/refactor-cleaner.md` | Systematic dead code removal and cleanup |
 
 ## Routing Table
 
@@ -43,6 +45,8 @@ Match user intent to agent. When multiple agents could handle a query, the first
 | "conventions", "coding style", "detect patterns", "code consistency" | code-reviewer | — |
 | "add feature" (architecture-appropriate) | dotnet-architect | api-designer, ef-core-specialist |
 | "refactor" | code-reviewer | dotnet-architect |
+| "build errors", "fix build", "won't compile" | build-error-resolver | — |
+| "clean up", "dead code", "unused code", "de-sloppify" | refactor-cleaner | — |
 
 ## Skill Loading Order
 
@@ -64,6 +68,8 @@ Agents load skills in dependency order. Core skills load first.
 | performance-analyst | modern-csharp, caching |
 | devops-engineer | modern-csharp, docker, ci-cd, aspire |
 | code-reviewer | modern-csharp, code-review-workflow, convention-learner + contextual (loads relevant skills incl. clean-architecture, ddd based on files under review) |
+| build-error-resolver | modern-csharp, autonomous-loops + contextual: ef-core, dependency-injection |
+| refactor-cleaner | modern-csharp, de-sloppify + contextual: testing, ef-core |
 
 ## MCP Tool Preferences
 
@@ -85,7 +91,7 @@ Agents should **prefer Roslyn MCP tools over file scanning** to reduce token con
 
 ## Cross-Agent Meta Skills
 
-These 7 meta and productivity skills are not tied to a specific agent — any agent can load them when the context calls for it:
+These 10 meta and productivity skills are not tied to a specific agent — any agent can load them when the context calls for it:
 
 | Skill | When to Load |
 |-------|-------------|
@@ -96,6 +102,9 @@ These 7 meta and productivity skills are not tied to a specific agent — any ag
 | `80-20-review` | Code review, PR review, deciding what to review in depth |
 | `split-memory` | CLAUDE.md exceeds 300 lines, need to split instructions across files |
 | `learning-log` | Non-obvious discovery during development — log the insight |
+| `instinct-system` | Pattern detection across sessions — observe-hypothesize-confirm cycle for project conventions |
+| `session-management` | Session start/end — load handoff, detect solution, write session summary |
+| `autonomous-loops` | Iterative fix loops — build-fix, test-fix, refactor with bounded iterations |
 
 ### Meta Skill Routing
 
@@ -108,6 +117,31 @@ These 7 meta and productivity skills are not tied to a specific agent — any ag
 | "review this", "what should I review", "blast radius" | 80-20-review |
 | "split CLAUDE.md", "too long", "organize instructions" | split-memory |
 | "log this", "document this finding", "gotcha" | learning-log |
+| "show instincts", "what have you learned", "confidence scores" | instinct-system |
+| "start session", "load handoff", "session start" | session-management |
+| "fix build loop", "keep fixing", "auto-fix" | autonomous-loops |
+
+## Slash Commands
+
+Commands map to skills and agents. Use these as shortcuts for common workflows.
+
+| Command | Primary Skill | Primary Agent | Purpose |
+|---------|--------------|---------------|---------|
+| `/plan` | architecture-advisor | dotnet-architect | Architecture-aware planning |
+| `/verify` | verification-loop | — | 7-phase verification pipeline |
+| `/tdd` | testing | test-engineer | Red-green-refactor workflow |
+| `/scaffold` | scaffolding | dotnet-architect | Architecture-aware feature scaffolding |
+| `/code-review` | code-review-workflow | code-reviewer | MCP-powered code review |
+| `/build-fix` | autonomous-loops | build-error-resolver | Iterative build error fixing |
+| `/checkpoint` | wrap-up-ritual | — | Save progress (commit + handoff) |
+| `/security-scan` | security-scan | security-auditor | OWASP + secrets + dependency audit |
+| `/migrate` | migration-workflow | ef-core-specialist | Safe EF Core migration workflow |
+| `/health-check` | health-check | code-reviewer | Graded project health report |
+| `/de-sloppify` | de-sloppify | refactor-cleaner | Systematic code cleanup |
+| `/wrap-up` | wrap-up-ritual | — | Session ending ritual |
+| `/instinct-status` | instinct-system | — | Show learned instincts |
+| `/instinct-export` | instinct-system | — | Export instincts to shareable format |
+| `/instinct-import` | instinct-system | — | Import instincts from another project |
 
 ## Conflict Resolution
 

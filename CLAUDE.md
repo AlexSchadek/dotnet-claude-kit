@@ -77,6 +77,54 @@ Knowledge files at `knowledge/` are NOT skills. They're reference material that 
 - `breaking-changes.md` — Migration gotchas
 - `decisions/*.md` — ADRs using the template format
 
+## Command Structure
+
+Commands live at `commands/<command-name>.md`. Each command is a lightweight orchestrator that invokes skills and agents.
+
+### Frontmatter Schema (Required)
+
+```yaml
+---
+description: >
+  What this command does. Displayed in command listings.
+---
+```
+
+### Required Sections
+
+1. **What** — What the command does
+2. **When** — When to use it (trigger phrases)
+3. **How** — Step-by-step execution flow (invokes skills/agents)
+4. **Example** — Example output or usage
+5. **Related** — Related commands
+
+### Quality Standards
+
+- **Maximum 200 lines** — Commands are orchestrators, not encyclopedias
+- **Invoke, don't implement** — Commands reference skills and agents for the actual logic
+- **Clear trigger phrases** — Users should know when to reach for this command
+
+## Rule Structure
+
+Rules live at `rules/dotnet/<rule-name>.md`. Rules are always loaded into context.
+
+### Frontmatter Schema (Required)
+
+```yaml
+---
+alwaysApply: true
+description: >
+  What this rule enforces.
+---
+```
+
+### Quality Standards
+
+- **Maximum 100 lines** — Rules are always in context, so every line costs tokens
+- **Prescriptive with rationale** — Each rule has a brief "why"
+- **DO/DON'T format** — Clear, scannable rules
+- **Total rules budget: ~600 lines** — All rules combined must stay lean
+
 ## Roslyn MCP Server
 
 The MCP server lives at `mcp/CWM.RoslynNavigator/`. It's a .NET 10 application using the ModelContextProtocol SDK.
@@ -144,7 +192,10 @@ How Claude should work on this repository (and any project using dotnet-claude-k
 ## Contribution Workflow
 
 1. Check the spec at `docs/dotnet-claude-kit-SPEC.md` for the full vision
-2. Follow the skill/agent/template structure defined above
+2. Follow the skill/agent/template/command/rule structure defined above
 3. Run `dotnet format --verify-no-changes` before committing
-4. Ensure skill files stay under 400 lines
+4. Ensure skill files stay under 400 lines, commands under 200, rules under 100
 5. Every new pattern needs a BAD/GOOD code comparison in Anti-patterns
+6. Ensure all cross-references (commands → skills, agents → skills) resolve to real files
+7. New commands must have YAML frontmatter with `description`
+8. New rules must have `alwaysApply: true` in frontmatter

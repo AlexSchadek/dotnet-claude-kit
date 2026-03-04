@@ -59,6 +59,208 @@ jobs:
           fi
           echo "All skills validated successfully"
 
+  validate-commands:
+    name: Validate Commands
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check command frontmatter and structure
+        run: |
+          errors=0
+          if [ ! -d "commands" ] || [ -z "$(ls commands/*.md 2>/dev/null)" ]; then
+            echo "WARNING: No command files found in commands/"
+            exit 0
+          fi
+          for cmd in commands/*.md; do
+            # Check YAML frontmatter exists
+            if ! head -1 "$cmd" | grep -q "^---$"; then
+              echo "ERROR: $cmd missing YAML frontmatter"
+              errors=$((errors + 1))
+            fi
+
+            # Check description field
+            if ! grep -q "^description:" "$cmd"; then
+              echo "ERROR: $cmd missing 'description' in frontmatter"
+              errors=$((errors + 1))
+            fi
+
+            # Check line count (max 200)
+            lines=$(wc -l < "$cmd")
+            if [ "$lines" -gt 200 ]; then
+              echo "ERROR: $cmd has $lines lines (max 200)"
+              errors=$((errors + 1))
+            fi
+
+            # Check required sections
+            for section in "What" "When" "How"; do
+              if ! grep -q "## $section" "$cmd"; then
+                echo "WARNING: $cmd missing '## $section' section"
+              fi
+            done
+          done
+
+          if [ $errors -gt 0 ]; then
+            echo "$errors error(s) found"
+            exit 1
+          fi
+          count=$(ls commands/*.md 2>/dev/null | wc -l)
+          echo "All $count commands validated successfully"
+
+  validate-rules:
+    name: Validate Rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check rule frontmatter and size
+        run: |
+          errors=0
+          if [ ! -d "rules" ]; then
+            echo "WARNING: No rules directory found"
+            exit 0
+          fi
+          for rule in $(find rules -name "*.md" -type f); do
+            # Check YAML frontmatter exists
+            if ! head -1 "$rule" | grep -q "^---$"; then
+              echo "ERROR: $rule missing YAML frontmatter"
+              errors=$((errors + 1))
+            fi
+
+            # Check alwaysApply: true
+            if ! grep -q "^alwaysApply: true" "$rule"; then
+              echo "ERROR: $rule missing 'alwaysApply: true' in frontmatter"
+              errors=$((errors + 1))
+            fi
+
+            # Check line count (max 100)
+            lines=$(wc -l < "$rule")
+            if [ "$lines" -gt 100 ]; then
+              echo "ERROR: $rule has $lines lines (max 100)"
+              errors=$((errors + 1))
+            fi
+          done
+
+          if [ $errors -gt 0 ]; then
+            echo "$errors error(s) found"
+            exit 1
+          fi
+          count=$(find rules -name "*.md" -type f | wc -l)
+          echo "All $count rules validated successfully"
+
+  validate-agents:
+    name: Validate Agents
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check agent structure
+        run: |
+          errors=0
+          for agent in agents/*.md; do
+            # Check required sections
+            for section in "Role Definition" "Skill Dependencies" "MCP Tool Usage" "Boundaries"; do
+              if ! grep -q "## $section" "$agent"; then
+                echo "ERROR: $agent missing '## $section' section"
+                errors=$((errors + 1))
+              fi
+            done
+
+            # Check that referenced skills exist
+            while IFS= read -r skill; do
+              if [ ! -f "skills/$skill/SKILL.md" ]; then
+                echo "WARNING: $agent references skill '$skill' but skills/$skill/SKILL.md not found"
+              fi
+            done < <(grep -oP '`(\w[\w-]+)`' "$agent" | tr -d '`' | sort -u | while read s; do
+              if [ -d "skills/$s" ]; then echo "$s"; fi
+            done)
+          done
+
+          if [ $errors -gt 0 ]; then
+            echo "$errors error(s) found"
+            exit 1
+          fi
+          count=$(ls agents/*.md 2>/dev/null | wc -l)
+          echo "All $count agents validated successfully"
+
+  validate-cross-references:
+    name: Validate Cross-References
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check skill references resolve
+        run: |
+          errors=0
+          # Check commands reference existing skills
+          for cmd in commands/*.md; do
+            while IFS= read -r skill; do
+              if [ ! -f "skills/$skill/SKILL.md" ]; then
+                echo "WARNING: $cmd references skill '$skill' — not found"
+              fi
+            done < <(grep -oP 'skills/[\w-]+' "$cmd" 2>/dev/null | sed 's|skills/||' | sort -u)
+          done
+
+          # Check AGENTS.md references existing skills and agents
+          while IFS= read -r agent_file; do
+            if [ ! -f "$agent_file" ]; then
+              echo "ERROR: AGENTS.md references '$agent_file' but it does not exist"
+              errors=$((errors + 1))
+            fi
+          done < <(grep -oP 'agents/[\w-]+\.md' AGENTS.md 2>/dev/null | sort -u)
+
+          if [ $errors -gt 0 ]; then
+            echo "$errors error(s) found"
+            exit 1
+          fi
+          echo "Cross-references validated"
+
+  validate-hooks:
+    name: Validate Hooks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check hook scripts exist and are valid
+        run: |
+          errors=0
+          # Extract script paths from hooks.json
+          scripts=$(python3 -c "
+          import json, re
+          d = json.load(open('hooks/hooks.json'))
+          for event, entries in d.get('hooks', {}).items():
+              for entry in entries:
+                  for hook in entry.get('hooks', []):
+                      cmd = hook.get('command', '')
+                      # Extract .sh file references
+                      for match in re.findall(r'[\w/.-]+\.sh', cmd):
+                          # Resolve CLAUDE_PLUGIN_ROOT to current dir
+                          resolved = match.replace('\${CLAUDE_PLUGIN_ROOT}/', '')
+                          print(resolved)
+          ")
+
+          for script in $scripts; do
+            if [ ! -f "$script" ]; then
+              echo "ERROR: hooks.json references '$script' but it does not exist"
+              errors=$((errors + 1))
+            else
+              echo "OK: $script"
+              # Basic syntax check
+              if command -v bash > /dev/null; then
+                if ! bash -n "$script" 2>/dev/null; then
+                  echo "ERROR: $script has syntax errors"
+                  errors=$((errors + 1))
+                fi
+              fi
+            fi
+          done
+
+          if [ $errors -gt 0 ]; then
+            echo "$errors error(s) found"
+            exit 1
+          fi
+          echo "All hook scripts validated"
+
   validate-plugin:
     name: Validate Plugin Manifests
     runs-on: ubuntu-latest
@@ -98,7 +300,7 @@ jobs:
       - name: Validate component paths exist
         run: |
           errors=0
-          for path in skills/ agents/ hooks/hooks.json .mcp.json; do
+          for path in skills/ agents/ commands/ rules/ hooks/hooks.json .mcp.json; do
             if [ ! -e "$path" ]; then
               echo "ERROR: plugin.json references '$path' but it does not exist"
               errors=$((errors + 1))
