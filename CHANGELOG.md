@@ -5,18 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.7.0] — 2026-03-04
+## [0.7.0] — 2026-03-22
 
 ### Added
 - **Common infrastructure knowledge doc** — `knowledge/common-infrastructure.md` with copy-paste implementations for Result, ValidationFilter, GlobalExceptionHandler (IExceptionHandler), IEndpointGroup + MapEndpoints, PaginationQuery, PagedList, and Program.cs setup checklist
 - **MediatR → Mediator migration guide** — `knowledge/mediatr-to-mediator-migration.md` with side-by-side API comparison, key differences (ValueTask, MessageHandlerDelegate), code examples, and step-by-step migration checklist
 - **Rate limiting section** in resilience skill — fixed window, sliding window, token bucket algorithms with custom 429 ProblemDetails response and per-endpoint `.RequireRateLimiting()` usage
 - **Additional `field` keyword examples** in modern-csharp skill — lazy initialization (`field ??=`) and INotifyPropertyChanged change notification patterns
+- **`maxResults` parameter on `find_references`** — Caps results at 100 (default) to prevent token-blowing responses for widely-used symbols
 
 ### Changed
 - **Messaging skill rewritten Wolverine-first** — All patterns (setup, publishing, consuming, outbox, saga) now show Wolverine code. MassTransit condensed to ~30-line alternative section with commercial license note
 - **Modular monolith template** updated to Wolverine types — `IPublishEndpoint` → `IMessageBus`, `IConsumer<T>` → convention-based handler
 - **Error-handling skill** — Global Exception Handler section now references `common-infrastructure.md` for the modern `IExceptionHandler` approach
+- **MCP server performance optimizations:**
+  - `find_references` — Caches `SourceText` per document (200 async calls → ~10 for multi-reference files)
+  - `find_dead_code` — Fast name-based pre-filter skips ~80-90% of expensive `FindReferencesAsync` calls
+  - `get_dependency_graph` — O(1) file-to-project lookup via pre-built dictionary (was O(P*D) per recursion step)
+  - `detect_circular_dependencies` — Extracted `IsUserType()` helper to reduce `ToDisplayString()` allocations
+  - `SymbolResolver` — Uses `SymbolEqualityComparer.Default` for dedup instead of string allocation
+  - Compilation warming now runs in parallel (`Parallel.ForEachAsync`, max 4 concurrent) for ~2-4x faster startup
+  - Consolidated 4 duplicate `MakeRelativePath` methods into shared `SymbolResolver.MakeRelativePath`
 - Plugin version bumped to 0.7.0
 
 ## [0.6.0] — 2026-02-28

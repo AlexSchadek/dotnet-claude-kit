@@ -97,7 +97,7 @@ public static class DetectAntiPatternsTool
                 v.Id,
                 v.Severity.ToString().ToLowerInvariant(),
                 v.Message,
-                MakeRelativePath(v.File),
+                SymbolResolver.MakeRelativePath(v.File),
                 v.Line,
                 v.Snippet,
                 v.Suggestion))
@@ -124,12 +124,4 @@ public static class DetectAntiPatternsTool
             t.FilePath?.Contains(file, StringComparison.OrdinalIgnoreCase) == true);
     }
 
-    private static string MakeRelativePath(string filePath)
-    {
-        // Trim to just filename + parent folder for token efficiency
-        var parts = filePath.Replace('\\', '/').Split('/');
-        return parts.Length >= 2
-            ? $"{parts[^2]}/{parts[^1]}"
-            : parts[^1];
-    }
 }

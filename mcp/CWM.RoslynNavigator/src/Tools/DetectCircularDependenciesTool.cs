@@ -95,38 +95,39 @@ public static class DetectCircularDependenciesTool
         return FindCycles(graph, "type");
     }
 
+    private static bool IsUserType(INamedTypeSymbol type)
+    {
+        if (type.SpecialType != SpecialType.None) return false;
+        var ns = type.ContainingNamespace;
+        if (ns is null || ns.IsGlobalNamespace) return false;
+        var nsName = ns.ToDisplayString();
+        return !nsName.StartsWith("System", StringComparison.Ordinal)
+            && !nsName.StartsWith("Microsoft", StringComparison.Ordinal);
+    }
+
     private static IEnumerable<string> GetTypeDependencies(INamedTypeSymbol type)
     {
         // Base type
-        if (type.BaseType is not null && type.BaseType.SpecialType == SpecialType.None)
-            yield return type.BaseType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+        if (type.BaseType is INamedTypeSymbol baseType && IsUserType(baseType))
+            yield return baseType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
 
-        // Fields
         foreach (var member in type.GetMembers())
         {
             switch (member)
             {
-                case IFieldSymbol field when field.Type is INamedTypeSymbol fieldType
-                    && fieldType.SpecialType == SpecialType.None
-                    && !fieldType.ContainingNamespace.ToDisplayString().StartsWith("System"):
+                case IFieldSymbol { Type: INamedTypeSymbol fieldType } when IsUserType(fieldType):
                     yield return fieldType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
                     break;
 
-                case IPropertySymbol prop when prop.Type is INamedTypeSymbol propType
-                    && propType.SpecialType == SpecialType.None
-                    && !propType.ContainingNamespace.ToDisplayString().StartsWith("System"):
+                case IPropertySymbol { Type: INamedTypeSymbol propType } when IsUserType(propType):
                     yield return propType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
                     break;
 
                 case IMethodSymbol method:
                     foreach (var param in method.Parameters)
                     {
-                        if (param.Type is INamedTypeSymbol paramType
-                            && paramType.SpecialType == SpecialType.None
-                            && !paramType.ContainingNamespace.ToDisplayString().StartsWith("System"))
-                        {
+                        if (param.Type is INamedTypeSymbol paramType && IsUserType(paramType))
                             yield return paramType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-                        }
                     }
                     break;
             }

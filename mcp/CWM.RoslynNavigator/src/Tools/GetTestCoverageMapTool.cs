@@ -76,7 +76,7 @@ public static class GetTestCoverageMapTool
                     testTypeNames.Add(typeSymbol.Name);
                     var location = SymbolResolver.GetLocation(typeSymbol);
                     if (location.HasValue)
-                        testTypeFiles.TryAdd(typeSymbol.Name, MakeRelativePath(location.Value.File));
+                        testTypeFiles.TryAdd(typeSymbol.Name, SymbolResolver.MakeRelativePath(location.Value.File));
                 }
             }
         }
@@ -119,7 +119,7 @@ public static class GetTestCoverageMapTool
                         var location = SymbolResolver.GetLocation(typeSymbol);
                         coverage.Add(new TestCoverageEntry(
                             Type: typeName,
-                            File: location.HasValue ? MakeRelativePath(location.Value.File) : "unknown",
+                            File: location.HasValue ? SymbolResolver.MakeRelativePath(location.Value.File) : "unknown",
                             HasTests: hasTests,
                             TestFile: testFile));
                     }
@@ -182,9 +182,4 @@ public static class GetTestCoverageMapTool
         return (false, null);
     }
 
-    private static string MakeRelativePath(string filePath)
-    {
-        var parts = filePath.Replace('\\', '/').Split('/');
-        return parts.Length >= 2 ? $"{parts[^2]}/{parts[^1]}" : parts[^1];
-    }
 }

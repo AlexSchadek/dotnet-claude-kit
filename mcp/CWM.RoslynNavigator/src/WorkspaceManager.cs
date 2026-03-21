@@ -251,11 +251,10 @@ public sealed class WorkspaceManager : IDisposable
 
         _logger.LogInformation("Warming compilations for {Count} projects...", _solution.ProjectIds.Count);
 
-        foreach (var projectId in _solution.ProjectIds)
-        {
-            ct.ThrowIfCancellationRequested();
-            await GetCompilationAsync(projectId, ct);
-        }
+        await Parallel.ForEachAsync(
+            _solution.ProjectIds,
+            new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = ct },
+            async (projectId, token) => await GetCompilationAsync(projectId, token));
 
         _logger.LogInformation("All compilations warmed.");
     }

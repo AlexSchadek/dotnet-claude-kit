@@ -127,9 +127,9 @@ Responses/              → Token-optimized JSON response DTOs
 
 | Solution Size | Strategy |
 |---|---|
-| Small (1-15 projects) | Load entire workspace on startup, keep compilations warm |
-| Large (15-50 projects) | Lazy-load compilations on first query per project |
-| Enterprise (50+) | Lazy loading + warn if query touches unloaded project |
+| Small (1-15 projects) | Load entire workspace on startup, warm compilations in parallel (4 concurrent) |
+| Large (15-50 projects) | Lazy-load compilations on first query per project with LRU cache (30 max) |
+| Enterprise (50+) | Lazy loading + LRU eviction + warn if query touches unloaded project |
 
 ## Development
 
@@ -148,6 +148,17 @@ dotnet run --project mcp/CWM.RoslynNavigator/src/CWM.RoslynNavigator.csproj -- -
 ```
 
 ## Changelog
+
+### 0.7.0
+
+- **Performance optimizations across all tools:**
+  - `find_references` — Document text caching (200 async calls → ~10) + `maxResults` cap (default 100)
+  - `find_dead_code` — Fast name-based pre-filter skips ~80-90% of expensive Roslyn reference searches
+  - `get_dependency_graph` — O(1) file-to-project lookup via pre-built dictionary
+  - `detect_circular_dependencies` — Reduced `ToDisplayString()` allocations with `IsUserType()` helper
+  - `SymbolResolver` — `SymbolEqualityComparer.Default` for dedup instead of string allocation
+  - Parallel compilation warming (`Parallel.ForEachAsync`, max 4 concurrent) for ~2-4x faster startup
+  - Consolidated 4 duplicate `MakeRelativePath` into shared `SymbolResolver.MakeRelativePath`
 
 ### 0.6.0
 

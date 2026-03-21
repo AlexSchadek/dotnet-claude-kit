@@ -68,14 +68,33 @@ public static class FindDeadCodeTool
             .DistinctBy(c => c.Symbol.ToDisplayString())
             .ToList();
 
+        // Pre-collect all source texts for fast name-based pre-filter
+        var sourceTexts = new Dictionary<SyntaxTree, string>();
+        foreach (var proj in projects)
+        {
+            var comp = await workspace.GetCompilationAsync(proj.Id, ct);
+            if (comp is null) continue;
+            foreach (var tree in comp.SyntaxTrees)
+                sourceTexts.TryAdd(tree, (await tree.GetTextAsync(ct)).ToString());
+        }
+
         // Check references for each candidate
         var deadCode = new List<DeadCodeInfo>();
         var totalFound = 0;
 
-        foreach (var (symbol, file, line) in unique)
+        foreach (var (symbol, symbolFile, symbolLine) in unique)
         {
             ct.ThrowIfCancellationRequested();
 
+            // Fast pre-filter: if symbol name appears in other files, likely not dead
+            var declaringTree = symbol.DeclaringSyntaxReferences.FirstOrDefault()?.SyntaxTree;
+            var likelyReferenced = sourceTexts.Any(kvp =>
+                kvp.Key != declaringTree &&
+                kvp.Value.Contains(symbol.Name, StringComparison.Ordinal));
+
+            if (likelyReferenced) continue;
+
+            // Expensive but necessary for remaining candidates
             var references = await SymbolFinder.FindReferencesAsync(symbol, solution, ct);
             var refCount = references.Sum(r => r.Locations.Count());
 
@@ -87,8 +106,8 @@ public static class FindDeadCodeTool
                     deadCode.Add(new DeadCodeInfo(
                         Name: symbol.Name,
                         Kind: SymbolResolver.GetKindString(symbol),
-                        File: MakeRelativePath(file),
-                        Line: line,
+                        File: SymbolResolver.MakeRelativePath(symbolFile),
+                        Line: symbolLine,
                         ContainingType: symbol.ContainingType?.Name));
                 }
             }
@@ -174,9 +193,4 @@ public static class FindDeadCodeTool
         _ => solution.Projects
     };
 
-    private static string MakeRelativePath(string filePath)
-    {
-        var parts = filePath.Replace('\\', '/').Split('/');
-        return parts.Length >= 2 ? $"{parts[^2]}/{parts[^1]}" : parts[^1];
-    }
 }

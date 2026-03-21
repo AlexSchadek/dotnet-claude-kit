@@ -33,10 +33,17 @@ public static class GetDependencyGraphTool
 
         depth = Math.Clamp(depth, 1, 5);
 
+        // Build file-to-project lookup upfront — O(1) per recursion step instead of O(P*D)
+        var fileToProject = new Dictionary<string, Project>(StringComparer.OrdinalIgnoreCase);
+        foreach (var project in solution.Projects)
+            foreach (var doc in project.Documents)
+                if (doc.FilePath is not null)
+                    fileToProject.TryAdd(doc.FilePath, project);
+
         var visited = new HashSet<string>();
         var dependencies = new List<DependencyNode>();
 
-        await WalkDependenciesAsync(workspace, solution, rootMethod, 1, depth, visited, dependencies, ct);
+        await WalkDependenciesAsync(workspace, rootMethod, 1, depth, visited, dependencies, fileToProject, ct);
 
         return JsonSerializer.Serialize(new DependencyGraphResult(
             RootSymbol: rootMethod.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
@@ -46,12 +53,12 @@ public static class GetDependencyGraphTool
 
     private static async Task WalkDependenciesAsync(
         WorkspaceManager workspace,
-        Solution solution,
         IMethodSymbol method,
         int currentDepth,
         int maxDepth,
         HashSet<string> visited,
         List<DependencyNode> dependencies,
+        Dictionary<string, Project> fileToProject,
         CancellationToken ct)
     {
         if (currentDepth > maxDepth) return;
@@ -64,10 +71,9 @@ public static class GetDependencyGraphTool
         var syntax = await syntaxRef.GetSyntaxAsync(ct);
         var tree = syntaxRef.SyntaxTree;
 
-        // Find the project containing this syntax tree
-        var project = solution.Projects.FirstOrDefault(p =>
-            p.Documents.Any(d => d.FilePath == tree.FilePath));
-        if (project is null) return;
+        // O(1) project lookup via pre-built dictionary
+        if (tree.FilePath is null || !fileToProject.TryGetValue(tree.FilePath, out var project))
+            return;
 
         var compilation = await workspace.GetCompilationAsync(project.Id, ct);
         if (compilation is null) return;
@@ -96,22 +102,16 @@ public static class GetDependencyGraphTool
             dependencies.Add(new DependencyNode(
                 Symbol: calledMethod.Name,
                 ContainingType: calledMethod.ContainingType?.Name ?? "unknown",
-                File: location.HasValue ? MakeRelativePath(location.Value.File) : "external",
+                File: location.HasValue ? SymbolResolver.MakeRelativePath(location.Value.File) : "external",
                 Line: location?.Line ?? 0,
                 Depth: currentDepth));
 
             // Recurse if the method has source
             if (calledMethod.DeclaringSyntaxReferences.Length > 0)
             {
-                await WalkDependenciesAsync(workspace, solution, calledMethod,
-                    currentDepth + 1, maxDepth, visited, dependencies, ct);
+                await WalkDependenciesAsync(workspace, calledMethod,
+                    currentDepth + 1, maxDepth, visited, dependencies, fileToProject, ct);
             }
         }
-    }
-
-    private static string MakeRelativePath(string filePath)
-    {
-        var parts = filePath.Replace('\\', '/').Split('/');
-        return parts.Length >= 2 ? $"{parts[^2]}/{parts[^1]}" : parts[^1];
     }
 }

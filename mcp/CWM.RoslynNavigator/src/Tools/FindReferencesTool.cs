@@ -19,6 +19,7 @@ public static class FindReferencesTool
         [Description("The symbol name to find references for")] string symbolName,
         [Description("Optional: file path to disambiguate (e.g., 'IOrderRepository.cs')")] string? file = null,
         [Description("Optional: line number to disambiguate")] int? line = null,
+        [Description("Maximum results to return")] int maxResults = 100,
         CancellationToken ct = default)
     {
         var notReady = await workspace.EnsureReadyOrStatusAsync(ct);
@@ -34,17 +35,26 @@ public static class FindReferencesTool
 
         var references = await SymbolFinder.FindReferencesAsync(symbol, solution, ct);
 
+        var textCache = new Dictionary<DocumentId, Microsoft.CodeAnalysis.Text.SourceText>();
         var results = new List<RefLocation>();
+        var capped = false;
+
         foreach (var reference in references)
         {
             foreach (var location in reference.Locations)
             {
+                if (results.Count >= maxResults) { capped = true; break; }
+
                 var lineSpan = location.Location.GetLineSpan();
                 var document = solution.GetDocument(location.Document.Id);
                 var snippet = "";
                 if (document is not null)
                 {
-                    var text = await document.GetTextAsync(ct);
+                    if (!textCache.TryGetValue(document.Id, out var text))
+                    {
+                        text = await document.GetTextAsync(ct);
+                        textCache[document.Id] = text;
+                    }
                     var refLine = text.Lines[lineSpan.StartLinePosition.Line];
                     snippet = refLine.ToString().Trim();
                 }
@@ -55,6 +65,7 @@ public static class FindReferencesTool
                     Snippet: snippet,
                     Kind: ClassifyReferenceKind(location)));
             }
+            if (capped) break;
         }
 
         return JsonSerializer.Serialize(new ReferencesResult(results, results.Count));
