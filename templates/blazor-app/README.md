@@ -11,7 +11,7 @@ Use this template when you're building:
 
 ## How to Use
 
-1. Copy `CLAUDE.md` into the root of your Blazor project
+1. Copy `.github/copilot-instructions.md` into the root of your Blazor project
 2. Replace `[ProjectName]` with your actual project name
 3. Choose your render mode and update the **Project Context** section:
    - **Server** — All interactivity runs on the server over SignalR
@@ -23,7 +23,7 @@ Use this template when you're building:
 
 ## What's Included
 
-This template configures Claude Code to:
+This template configures GitHub Copilot in VS Code to:
 
 - Organize components by feature under `Components/Pages/`
 - Apply render modes at the component level, not globally

@@ -1,11 +1,11 @@
 <p align="center">
   <h1 align="center">dotnet-claude-kit</h1>
   <p align="center">
-    <strong>Make Claude Code an expert .NET developer.</strong>
+    <strong>Make GitHub Copilot in VS Code an expert .NET developer.</strong>
     <br />
-    47 skills &bull; 10 specialist agents &bull; 15 slash commands &bull; 10 rules &bull; 5 project templates &bull; 15 MCP tools &bull; 7 hooks
+    47 skills &bull; 10 specialist agents &bull; 16 prompts &bull; 8 instruction files &bull; 5 project templates &bull; 15 MCP tools &bull; 7 hook scripts
     <br />
-    Built for .NET 10 / C# 14. Architecture-aware. Token-efficient.
+    Built for .NET 10 / C# 14. Architecture-aware. Token-efficient. Copilot Pro+ ready.
   </p>
 </p>
 
@@ -26,13 +26,13 @@
 
 ## The Problem
 
-Claude Code is powerful, but out of the box it doesn't know **your** .NET conventions. It generates `DateTime.Now` instead of `TimeProvider`. It wraps EF Core in repository abstractions. It picks an architecture without asking about your domain. It reads entire source files when a Roslyn query would cost 10x fewer tokens.
+GitHub Copilot is powerful, but out of the box it doesn't know **your** .NET conventions. It generates `DateTime.Now` instead of `TimeProvider`. It wraps EF Core in repository abstractions. It picks an architecture without asking about your domain. It reads entire source files when a Roslyn query would cost 10x fewer tokens.
 
 **dotnet-claude-kit fixes all of that.**
 
 ## What This Is
 
-A curated knowledge and action layer that sits between Claude Code and your .NET project. Drop a single `CLAUDE.md` into your repo and Claude instantly knows:
+A curated knowledge and action layer that sits between Copilot and your .NET project. Run one install script (or copy `.github/` and `.vscode/mcp.json`) and Copilot instantly knows:
 
 - Which architecture fits your project (VSA, Clean Architecture, DDD, Modular Monolith)
 - How to write modern C# 14 with primary constructors, collection expressions, and records
@@ -73,84 +73,61 @@ v0.4.0 adds an **action layer** on top of the knowledge layer — Claude doesn't
 
 ## Installation
 
-### Plugin Install (Recommended)
+### Prerequisites
 
-Install as a Claude Code plugin — all 47 skills, 10 agents, 16 commands, 10 rules, hooks, and MCP config activate globally:
+- **VS Code** with **GitHub Copilot** (Pro+ recommended for full custom-agents support)
+- **PowerShell 7+ (`pwsh`)** for the lifecycle hook scripts at runtime
+  (the install script itself runs fine in Windows PowerShell 5.1)
+- **.NET 10 SDK** to build the Roslyn MCP server
 
-```bash
-# In your terminal — install the Roslyn MCP server
-dotnet tool install -g CWM.RoslynNavigator
-```
+### Install
 
-Then inside a Claude Code session:
+Clone the kit and run the install script against your target repo:
 
-```
-# Add the marketplace and install the plugin
-/plugin marketplace add codewithmukesh/dotnet-claude-kit
-/plugin install dotnet-claude-kit
-```
-
-**For local development/testing** (loads directly from disk, no install needed):
-
-```bash
-claude --plugin-dir /path/to/dotnet-claude-kit
-```
-
-### Per-Project Setup
-
-Navigate to your project directory (existing or empty) and run:
-
-```bash
-/dotnet-init
-```
-
-**Existing project?** It detects your solution, scans .csproj SDKs, reads your tech stack from config, asks architecture questions, and generates a customized `CLAUDE.md`.
-
-**Greenfield project?** It asks what you're building, scaffolds the full solution structure (`dotnet new sln`, projects, `Directory.Build.props`, `src/` and `tests/` folders), then generates `CLAUDE.md`. Follow up with `/scaffold` to add your first feature.
-
-No manual template copying needed.
-
-<details>
-<summary><strong>Manual Template Copy (Alternative)</strong></summary>
-
-If you prefer manual setup, copy the template matching your project type:
-
-```bash
-cp templates/web-api/CLAUDE.md ./CLAUDE.md           # REST API
-cp templates/modular-monolith/CLAUDE.md ./CLAUDE.md   # Multi-module system
-cp templates/blazor-app/CLAUDE.md ./CLAUDE.md          # Blazor app
-cp templates/worker-service/CLAUDE.md ./CLAUDE.md      # Background workers
-cp templates/class-library/CLAUDE.md ./CLAUDE.md       # NuGet packages
-```
-
-Replace `[ProjectName]`, update tech stack, choose your architecture.
-
-</details>
-
-Start Claude Code — 47 skills, 10 agents, 16 commands, 10 rules, and 15 MCP tools activate automatically.
-
-That's it. Claude now writes .NET code the way a senior .NET engineer would.
-
-<details>
-<summary><strong>Manual Install (Alternative)</strong></summary>
-
-If you prefer to clone the repo and wire things up manually:
-
-```bash
-# 1. Install the MCP server globally
-dotnet tool install -g CWM.RoslynNavigator
-
-# 2. Register it in Claude Code at user scope (available in ALL projects)
-claude mcp add --scope user cwm-roslyn-navigator -- cwm-roslyn-navigator --solution ${workspaceFolder}
-
-# 3. Clone the kit
+```powershell
 git clone https://github.com/codewithmukesh/dotnet-claude-kit.git
+cd dotnet-claude-kit
 
-# 4. Load as a local plugin (or copy a template manually)
-claude --plugin-dir ./dotnet-claude-kit
+# PowerShell 7+
+pwsh -File scripts/install.ps1 -Target C:\src\my-app
+
+# Windows PowerShell 5.1 (built-in on Windows) — if `pwsh` is not installed
+powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -Target C:\src\my-app
+
+# With a template overlay
+pwsh -File scripts/install.ps1 -Target C:\src\my-app -Template web-api
 ```
 
-</details>
+> Hooks require `pwsh` (PowerShell 7+) at runtime. Install it from
+> <https://aka.ms/powershell> or `winget install Microsoft.PowerShell` before
+> opening a kit-enabled repo in VS Code.
+
+On macOS / Linux:
+
+```bash
+bash scripts/install.sh --target ~/src/my-app --template web-api
+```
+
+The script copies:
+
+- `.github/copilot-instructions.md`
+- `.github/instructions/` — domain-scoped rules with `applyTo` globs
+- `.github/skills/` — 47 on-demand SKILL.md workflows
+- `.github/prompts/` — 16 slash-command prompts
+- `.github/agents/` — 10 specialist custom chat modes
+- `.github/hooks/hooks.json` — lifecycle hooks (PowerShell)
+- `.vscode/mcp.json` — Roslyn MCP server registration
+- `hooks/*.ps1` — the hook scripts referenced by `.github/hooks/hooks.json`
+
+### Build the Roslyn MCP server
+
+```powershell
+dotnet build mcp/CWM.RoslynNavigator/CWM.RoslynNavigator.slnx
+```
+
+The kit's `.vscode/mcp.json` runs the server via `dotnet run --project mcp/CWM.RoslynNavigator`. If you install into a repo that lives outside this kit, edit `.vscode/mcp.json` to point at the absolute path of your built MCP project.
+
+Open the workspace in VS Code — Copilot Chat picks up `copilot-instructions.md`, the `/`-menu lists every prompt and skill, the agent picker shows the 10 specialists, and the Roslyn MCP server starts automatically.
 
 ## What You Get
 

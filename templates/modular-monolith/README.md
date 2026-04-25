@@ -11,7 +11,7 @@ Use this template when you're building:
 
 ## How to Use
 
-1. Copy `CLAUDE.md` into the root of your .NET modular monolith project
+1. Copy `.github/copilot-instructions.md` into the root of your .NET modular monolith project
 2. Replace `[ProjectName]` with your actual project name
 3. Replace `[Module]` references with your actual module names (e.g., Orders, Catalog, Identity)
 4. Update the **Tech Stack** section to match your dependencies
@@ -20,7 +20,7 @@ Use this template when you're building:
 
 ## What's Included
 
-This template configures Claude Code to:
+This template configures GitHub Copilot in VS Code to:
 
 - Follow a module-per-project structure with each module using its own internal architecture
 - Enforce strict module boundaries — no direct cross-module references

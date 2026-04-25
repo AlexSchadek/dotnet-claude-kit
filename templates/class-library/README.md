@@ -10,7 +10,7 @@ Use this template when you are building:
 
 ## How to Use
 
-1. Copy `CLAUDE.md` into the root of your .NET class library project
+1. Copy `.github/copilot-instructions.md` into the root of your .NET class library project
 2. Replace `[ProjectName]` with your actual project name
 3. Replace `[Author]`, `[Description]`, `[org]`, `[repo]`, and tag placeholders in the NuGet package configuration section
 4. Update the **Tech Stack** section to match your actual dependencies
@@ -19,7 +19,7 @@ Use this template when you are building:
 
 ## What's Included
 
-This template configures Claude Code to:
+This template configures GitHub Copilot in VS Code to:
 - Maintain a clean public API surface with internal implementation details
 - Require XML documentation on all public members
 - Use .NET 10 / C# 14 modern patterns (primary constructors, collection expressions, records)

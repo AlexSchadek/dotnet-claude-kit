@@ -1,0 +1,23 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "pwsh -NoProfile -File ${workspaceFolder}/hooks/pre-bash-guard.ps1",
+        "timeout": 10
+      }
+    ],
+    "PostToolUse": [
+      {
+        "type": "command",
+        "command": "pwsh -NoProfile -File ${workspaceFolder}/hooks/post-edit-format.ps1",
+        "timeout": 30
+      },
+      {
+        "type": "command",
+        "command": "pwsh -NoProfile -File ${workspaceFolder}/hooks/post-scaffold-restore.ps1",
+        "timeout": 60
+      }
+    ]
+  }
+}

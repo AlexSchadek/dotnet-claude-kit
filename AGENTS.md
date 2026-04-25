@@ -1,21 +1,21 @@
 # Agent Routing & Orchestration
 
-> This file defines how Claude Code routes queries to specialist agents and how agents coordinate.
+> Tool-neutral routing reference. File paths reflect the VS Code Copilot layout under `.github/`.
 
 ## Agent Roster
 
 | Agent | File | Primary Domain |
 |-------|------|---------------|
-| dotnet-architect | `agents/dotnet-architect.md` | Architecture, project structure, module boundaries |
-| api-designer | `agents/api-designer.md` | Minimal APIs, OpenAPI, versioning, rate limiting |
-| ef-core-specialist | `agents/ef-core-specialist.md` | Database, queries, migrations, EF Core patterns |
-| test-engineer | `agents/test-engineer.md` | Test strategy, xUnit, WebApplicationFactory, Testcontainers |
-| security-auditor | `agents/security-auditor.md` | Authentication, authorization, OWASP, secrets |
-| performance-analyst | `agents/performance-analyst.md` | Benchmarks, memory, async patterns, caching |
-| devops-engineer | `agents/devops-engineer.md` | Docker, CI/CD, Aspire, deployment |
-| code-reviewer | `agents/code-reviewer.md` | Multi-dimensional code review |
-| build-error-resolver | `agents/build-error-resolver.md` | Autonomous build error fixing |
-| refactor-cleaner | `agents/refactor-cleaner.md` | Systematic dead code removal and cleanup |
+| dotnet-architect | `.github/agents/dotnet-architect.agent.md` | Architecture, project structure, module boundaries |
+| api-designer | `.github/agents/api-designer.agent.md` | Minimal APIs, OpenAPI, versioning, rate limiting |
+| ef-core-specialist | `.github/agents/ef-core-specialist.agent.md` | Database, queries, migrations, EF Core patterns |
+| test-engineer | `.github/agents/test-engineer.agent.md` | Test strategy, xUnit, WebApplicationFactory, Testcontainers |
+| security-auditor | `.github/agents/security-auditor.agent.md` | Authentication, authorization, OWASP, secrets |
+| performance-analyst | `.github/agents/performance-analyst.agent.md` | Benchmarks, memory, async patterns, caching |
+| devops-engineer | `.github/agents/devops-engineer.agent.md` | Docker, CI/CD, Aspire, deployment |
+| code-reviewer | `.github/agents/code-reviewer.agent.md` | Multi-dimensional code review |
+| build-error-resolver | `.github/agents/build-error-resolver.agent.md` | Autonomous build error fixing |
+| refactor-cleaner | `.github/agents/refactor-cleaner.agent.md` | Systematic dead code removal and cleanup |
 
 ## Routing Table
 

@@ -6,22 +6,22 @@ Thank you for your interest in contributing! This guide covers how to add skills
 
 1. Fork and clone the repository
 2. Read the spec in `docs/dotnet-claude-kit-SPEC.md`
-3. Read `CLAUDE.md` for repo development conventions
+3. Read `.github/copilot-instructions.md` for repo development conventions
 4. Check open issues for areas where help is needed
 
 ## Contribution Areas
 
 ### Skills
 
-Skills are the core of dotnet-claude-kit. Each skill lives at `skills/<skill-name>/SKILL.md`.
+Skills are the core of dotnet-claude-kit. Each skill lives at `.github/skills/<skill-name>/SKILL.md`.
 
 **Before creating a new skill:**
 - Check the [existing skills](#current-skills) to avoid overlap
 - Open a [Skill Proposal](../../issues/new?template=new-skill.yml) issue for discussion
-- Review the skill format in `CLAUDE.md`
+- Review the skill format in `.github/copilot-instructions.md`
 
 **Skill requirements:**
-- YAML frontmatter with `name` and `description`
+- YAML frontmatter with `name` (must match folder name) and `description`
 - Required sections: Core Principles, Patterns, Anti-patterns, Decision Guide
 - Maximum 400 lines
 - Every recommendation has a "why"
@@ -33,7 +33,7 @@ Skills are the core of dotnet-claude-kit. Each skill lives at `skills/<skill-nam
 Knowledge files in `knowledge/` are reference material, not skills.
 
 - `dotnet-whats-new.md` — Updated per .NET preview/release
-- `common-antipatterns.md` — Patterns Claude should never generate
+- `common-antipatterns.md` — Patterns Copilot should never generate
 - `package-recommendations.md` — Vetted NuGet packages
 - `breaking-changes.md` — Migration gotchas
 - `decisions/*.md` — Architecture Decision Records
@@ -45,31 +45,31 @@ Knowledge files in `knowledge/` are reference material, not skills.
 
 ### Templates
 
-Templates in `templates/<type>/` provide drop-in `CLAUDE.md` files for user projects.
+Templates in `templates/<type>/` provide drop-in `.github/copilot-instructions.md` files for user projects.
 
 Each template needs:
-- `CLAUDE.md` — The drop-in file with project context, skills references, commands
+- `.github/copilot-instructions.md` — The drop-in file with project context, skills references, commands
 - `README.md` — When and how to use the template
 
-### Commands
+### Prompts
 
-Commands in `commands/` are lightweight orchestrators that invoke skills and agents.
+Prompts in `.github/prompts/*.prompt.md` are lightweight orchestrators that invoke skills and agents.
 
-**Command requirements:**
-- YAML frontmatter with `description`
-- Required sections: What, When, How, Example, Related
+**Prompt requirements:**
+- YAML frontmatter with `description` (optional `agent:`, `argument-hint:`, `model:`)
 - Maximum 200 lines
-- Commands invoke skills/agents — they don't contain the logic themselves
+- Prompts invoke skills/agents — they don't contain the logic themselves
 
-### Rules
+### Instructions
 
-Rules in `rules/dotnet/` are always-loaded conventions.
+Instructions in `.github/instructions/*.instructions.md` are scoped, opt-in conventions.
 
-**Rule requirements:**
-- YAML frontmatter with `alwaysApply: true` and `description`
-- Maximum 100 lines (rules are always in context — every line costs tokens)
+**Instruction requirements:**
+- YAML frontmatter with `description` and (usually) `applyTo` glob
+- **Never use `applyTo: "**"`** — burns context on every interaction. Use specific globs.
+- Maximum 100 lines (instructions are loaded into context — every line costs tokens)
 - Prescriptive DO/DON'T format with brief rationale for each rule
-- All rules combined should stay under ~600 lines total
+- All instructions combined should stay under ~600 lines total
 
 ### Roslyn MCP Server
 

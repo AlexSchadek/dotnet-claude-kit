@@ -9,7 +9,7 @@ Use this template when you're building:
 
 ## How to Use
 
-1. Copy `CLAUDE.md` into the root of your .NET Web API project
+1. Copy `.github/copilot-instructions.md` into the root of your .NET Web API project
 2. Replace `[ProjectName]` with your actual project name
 3. Update the **Tech Stack** section to match your dependencies
 4. Choose your handler approach (Mediator, Wolverine, or raw handlers) and update the feature file convention accordingly
@@ -17,7 +17,7 @@ Use this template when you're building:
 
 ## What's Included
 
-This template configures Claude Code to:
+This template configures GitHub Copilot in VS Code to:
 - Choose an architecture (VSA, Clean Architecture, or DDD) via the architecture-advisor skill
 - Use .NET 10 / C# 14 modern patterns
 - Use `IEndpointGroup` per feature with `app.MapEndpoints()` auto-discovery — no endpoints in Program.cs

@@ -11,7 +11,7 @@ Use this template when you're building:
 
 ## How to Use
 
-1. Copy `CLAUDE.md` into the root of your .NET Worker Service project
+1. Copy `.github/copilot-instructions.md` into the root of your .NET Worker Service project
 2. Replace `[ProjectName]` with your actual project name
 3. Update the **Tech Stack** section to match your dependencies
 4. Remove optional items (Hangfire, EF Core) from the tech stack if not used
@@ -19,7 +19,7 @@ Use this template when you're building:
 
 ## What's Included
 
-This template configures Claude Code to:
+This template configures GitHub Copilot in VS Code to:
 - Structure workers with proper `BackgroundService` inheritance and cancellation
 - Use Wolverine or MassTransit for message consumption with correctly scoped consumers
 - Create service scopes inside long-running loops to avoid captive dependency issues
