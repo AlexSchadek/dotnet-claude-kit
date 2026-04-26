@@ -1,7 +1,8 @@
 {
-  "version": "1.0.1",
+  "version": "1.1.0",
   "agent": "orchestrator",
   "delegates": [
+    "api-designer",
     "build-error-resolver",
     "code-reviewer",
     "devops-engineer",
@@ -13,6 +14,16 @@
     "test-engineer"
   ],
   "weightedSignals": {
+    "api-designer": [
+      { "signal": "endpoint", "type": "token", "weight": 0.35 },
+      { "signal": "api route", "type": "phrase", "weight": 0.35 },
+      { "signal": "minimal api", "type": "phrase", "weight": 0.4 },
+      { "signal": "openapi", "type": "token", "weight": 0.35 },
+      { "signal": "swagger", "type": "token", "weight": 0.3 },
+      { "signal": "versioning", "type": "token", "weight": 0.3 },
+      { "signal": "rate limiting", "type": "phrase", "weight": 0.25 },
+      { "signal": "cors", "type": "token", "weight": 0.25 }
+    ],
     "build-error-resolver": [
       { "signal": "cs\\d{4}", "type": "regex", "weight": 0.45 },
       { "signal": "nu\\d{4}", "type": "regex", "weight": 0.45 },
@@ -111,6 +122,12 @@
     },
     "conflictAdjustments": [
       {
+        "name": "api-design-pair-boost",
+        "ifAnyMatchedGroupA": ["endpoint", "minimal api"],
+        "ifAnyMatchedGroupB": ["openapi", "versioning"],
+        "apply": { "api-designer": 0.1 }
+      },
+      {
         "name": "security-keyword-boost",
         "ifMatchedAny": ["auth", "authorization", "jwt", "secret", "key vault", "owasp", "vulnerability", "xss", "csrf", "sqli", "threat model"],
         "apply": { "security-auditor": 0.15, "allNonSecurityAgents": -0.05 }
@@ -152,6 +169,7 @@
   "tieBreakOrder": [
     "security-auditor",
     "build-error-resolver",
+    "api-designer",
     "dotnet-architect",
     "ef-core-specialist",
     "performance-analyst",
