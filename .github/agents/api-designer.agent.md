@@ -1,7 +1,8 @@
 ---
+name: API Designer
 description: "Use when designing HTTP APIs, creating endpoints, OpenAPI specs, API versioning, rate limiting, or Swagger."
-tools: [read, edit, search, execute]
-model: ['Claude Sonnet 4.5 (copilot)', 'GPT-5 (copilot)']
+tools: [vscode/askQuestions, execute, read, edit, search, todo]
+model: ['Claude Sonnet 4.6 (copilot)', 'GPT-5 (copilot)']
 ---
 
 # API Designer Agent

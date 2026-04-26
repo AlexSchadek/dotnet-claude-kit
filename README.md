@@ -3,7 +3,7 @@
   <p align="center">
     <strong>Make GitHub Copilot in VS Code an expert .NET developer.</strong>
     <br />
-    47 skills &bull; 10 specialist agents &bull; 16 prompts &bull; 8 instruction files &bull; 5 project templates &bull; 15 MCP tools &bull; 7 hook scripts
+    47 skills &bull; 10 specialist agents &bull; 16 prompts &bull; 9 instruction files &bull; 5 project templates &bull; 15 MCP tools &bull; 7 hook scripts
     <br />
     Built for .NET 10 / C# 14. Architecture-aware. Token-efficient. Copilot Pro+ ready.
   </p>
@@ -231,6 +231,16 @@ Always-loaded conventions that apply to every interaction. Zero configuration â€
 | [agents](.claude/rules/agents.md) | MCP-first, subagent routing, skill loading order |
 | [hooks](.claude/rules/hooks.md) | Auto-accept formatting, never skip pre-commit hooks |
 | [packages](.claude/rules/packages.md) | Always use latest stable NuGet versions, never rely on training data versions |
+
+### Using Cursor dotnet-rules in VS Code Copilot
+
+If you use Cursor and VS Code in parallel:
+
+- [.cursor/rules/dotnet-rules.md](.cursor/rules/dotnet-rules.md) is treated as a generated Cursor-facing aggregate.
+- VS Code Copilot behavior is driven by [.github/copilot-instructions.md](.github/copilot-instructions.md) and files in [.github/instructions](.github/instructions).
+- The explicit compatibility mapping lives in [.github/instructions/dotnet-rules.instructions.md](.github/instructions/dotnet-rules.instructions.md).
+
+When updating policy, edit the domain instruction files in [.github/instructions](.github/instructions) first, then regenerate any Cursor aggregate output if your workflow requires it.
 
 ## Skills (47)
 

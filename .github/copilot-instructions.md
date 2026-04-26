@@ -25,6 +25,8 @@ dotnet-claude-kit is an opinionated GitHub Copilot companion for .NET developers
 | `.github/prompts/*.prompt.md` | Slash-command prompts (e.g. `/plan`, `/scaffold`, `/verify`). |
 | `.github/agents/*.agent.md` | Custom chat modes / specialist subagents. |
 | `.github/hooks/*.json` | Lifecycle hooks (PowerShell scripts under `hooks/`). |
+| `.github/instructions/dotnet-rules.instructions.md` | Compatibility map for Cursor `.cursor/rules/dotnet-rules.md` users in VS Code Copilot. |
+| `.cursor/rules/dotnet-rules.md` | Generated aggregate reference for Cursor; not the primary Copilot instruction source. |
 | `.vscode/mcp.json` | MCP server registration for the Roslyn navigator. |
 | `agents/`, `commands/`, `skills/` (top-level) | **Removed** — migrated to `.github/`. |
 | `knowledge/` | Reference material (ADRs, antipatterns, package recommendations). Tool-neutral. |
@@ -67,6 +69,12 @@ dotnet-claude-kit is an opinionated GitHub Copilot companion for .NET developers
 - **Fix bugs autonomously** — investigate and resolve. Don't ask for hand-holding.
 - **Use subagents for parallel work** — keep main context clean.
 - **Learn from corrections** — capture patterns; the mistake rate should drop over time.
+
+## Cursor Rules Compatibility
+
+- If contributors use Cursor rules, treat `.cursor/rules/dotnet-rules.md` as a generated aggregate reference.
+- For VS Code Copilot behavior, `.github/instructions/*.instructions.md` remains the source of truth.
+- Keep rule content aligned by updating the domain instruction files (coding style, architecture, security, performance, testing, packages, git workflow, hooks) rather than editing generated aggregates directly.
 
 ## Roslyn MCP Server
 
