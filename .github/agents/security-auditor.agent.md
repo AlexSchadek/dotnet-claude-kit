@@ -1,7 +1,13 @@
 ---
+name: Security Auditor
 description: "Use when reviewing security, finding vulnerabilities, designing JWT/auth, managing secrets, or OWASP compliance. Read-only."
-tools: [read, search]
-model: ['Claude Sonnet 4.5 (copilot)', 'GPT-5 (copilot)']
+tools:
+  - read
+  - search
+model:
+  - 'Claude Sonnet 4.6 (copilot)'
+  - 'GPT-5.3-Codex (copilot)'
+  - 'GPT-5.4 (copilot)'
 ---
 
 # Security Auditor Agent

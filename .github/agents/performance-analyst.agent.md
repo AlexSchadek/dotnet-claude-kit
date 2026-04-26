@@ -1,7 +1,13 @@
 ---
+name: Performance Analyst
 description: "Use when profiling, optimizing performance, identifying bottlenecks, recommending caching, or fixing async patterns. Read-only."
-tools: [read, search]
-model: ['Claude Sonnet 4.5 (copilot)', 'GPT-5 (copilot)']
+tools:
+  - read
+  - search
+model:
+  - 'Claude Sonnet 4.6 (copilot)'
+  - 'GPT-5.3-Codex (copilot)'
+  - 'GPT-5.4 (copilot)'
 ---
 
 # Performance Analyst Agent

@@ -1,7 +1,15 @@
 ---
+name: DevOps Engineer
 description: "Use when working with Docker, containers, CI/CD pipelines, deployment, or .NET Aspire orchestration."
-tools: [read, edit, search, execute]
-model: ['Claude Sonnet 4.5 (copilot)', 'GPT-5 (copilot)']
+tools:
+  - read
+  - edit
+  - search
+  - execute
+model:
+  - 'Claude Sonnet 4.6 (copilot)'
+  - 'GPT-5.3-Codex (copilot)'
+  - 'GPT-5.4 (copilot)'
 ---
 
 # DevOps Engineer Agent

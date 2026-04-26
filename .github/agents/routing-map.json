@@ -1,0 +1,201 @@
+{
+  "version": "1.0.1",
+  "agent": "orchestrator",
+  "delegates": [
+    "build-error-resolver",
+    "code-reviewer",
+    "devops-engineer",
+    "dotnet-architect",
+    "ef-core-specialist",
+    "performance-analyst",
+    "refactor-cleaner",
+    "security-auditor",
+    "test-engineer"
+  ],
+  "weightedSignals": {
+    "build-error-resolver": [
+      { "signal": "cs\\d{4}", "type": "regex", "weight": 0.45 },
+      { "signal": "nu\\d{4}", "type": "regex", "weight": 0.45 },
+      { "signal": "build failed", "type": "phrase", "weight": 0.35 },
+      { "signal": "compiler error", "type": "phrase", "weight": 0.35 },
+      { "signal": "restore failed", "type": "phrase", "weight": 0.3 },
+      { "signal": "msbuild", "type": "token", "weight": 0.25 },
+      { "signal": "package downgrade", "type": "phrase", "weight": 0.25 }
+    ],
+    "code-reviewer": [
+      { "signal": "code review", "type": "phrase", "weight": 0.4 },
+      { "signal": "pr", "type": "token", "weight": 0.35 },
+      { "signal": "pull request", "type": "phrase", "weight": 0.35 },
+      { "signal": "correctness", "type": "token", "weight": 0.3 },
+      { "signal": "maintainability", "type": "token", "weight": 0.3 },
+      { "signal": "blast radius", "type": "phrase", "weight": 0.25 },
+      { "signal": "readability", "type": "token", "weight": 0.2 }
+    ],
+    "devops-engineer": [
+      { "signal": "docker", "type": "token", "weight": 0.35 },
+      { "signal": "kubernetes", "type": "token", "weight": 0.35 },
+      { "signal": "aks", "type": "token", "weight": 0.35 },
+      { "signal": "ci/cd", "type": "token", "weight": 0.35 },
+      { "signal": "github actions", "type": "phrase", "weight": 0.35 },
+      { "signal": "azure pipeline", "type": "phrase", "weight": 0.35 },
+      { "signal": "deploy", "type": "token", "weight": 0.25 },
+      { "signal": "helm", "type": "token", "weight": 0.25 },
+      { "signal": "container", "type": "token", "weight": 0.25 }
+    ],
+    "dotnet-architect": [
+      { "signal": "architecture", "type": "token", "weight": 0.4 },
+      { "signal": "solution structure", "type": "phrase", "weight": 0.35 },
+      { "signal": "bounded context", "type": "phrase", "weight": 0.3 },
+      { "signal": "clean architecture", "type": "phrase", "weight": 0.3 },
+      { "signal": "modular monolith", "type": "phrase", "weight": 0.3 },
+      { "signal": "domain boundary", "type": "phrase", "weight": 0.3 }
+    ],
+    "ef-core-specialist": [
+      { "signal": "dbcontext", "type": "token", "weight": 0.4 },
+      { "signal": "ef core", "type": "phrase", "weight": 0.4 },
+      { "signal": "migration", "type": "token", "weight": 0.35 },
+      { "signal": "linq query", "type": "phrase", "weight": 0.3 },
+      { "signal": "include", "type": "token", "weight": 0.2 },
+      { "signal": "tracking", "type": "token", "weight": 0.25 },
+      { "signal": "asnotracking", "type": "token", "weight": 0.25 },
+      { "signal": "sql translation", "type": "phrase", "weight": 0.25 }
+    ],
+    "performance-analyst": [
+      { "signal": "latency", "type": "token", "weight": 0.35 },
+      { "signal": "throughput", "type": "token", "weight": 0.3 },
+      { "signal": "profiling", "type": "token", "weight": 0.35 },
+      { "signal": "bottleneck", "type": "token", "weight": 0.35 },
+      { "signal": "memory", "type": "token", "weight": 0.3 },
+      { "signal": "cpu", "type": "token", "weight": 0.25 },
+      { "signal": "cache", "type": "token", "weight": 0.25 },
+      { "signal": "async performance", "type": "phrase", "weight": 0.25 }
+    ],
+    "refactor-cleaner": [
+      { "signal": "refactor", "type": "token", "weight": 0.4 },
+      { "signal": "dead code", "type": "phrase", "weight": 0.35 },
+      { "signal": "cleanup", "type": "token", "weight": 0.3 },
+      { "signal": "simplify", "type": "token", "weight": 0.25 },
+      { "signal": "code smell", "type": "phrase", "weight": 0.3 },
+      { "signal": "tech debt", "type": "phrase", "weight": 0.25 }
+    ],
+    "security-auditor": [
+      { "signal": "auth", "type": "token", "weight": 0.3 },
+      { "signal": "authorization", "type": "token", "weight": 0.3 },
+      { "signal": "jwt", "type": "token", "weight": 0.3 },
+      { "signal": "secret", "type": "token", "weight": 0.35 },
+      { "signal": "key vault", "type": "phrase", "weight": 0.35 },
+      { "signal": "owasp", "type": "token", "weight": 0.4 },
+      { "signal": "vulnerability", "type": "token", "weight": 0.4 },
+      { "signal": "xss", "type": "token", "weight": 0.35 },
+      { "signal": "csrf", "type": "token", "weight": 0.35 },
+      { "signal": "sqli", "type": "token", "weight": 0.35 },
+      { "signal": "threat model", "type": "phrase", "weight": 0.3 }
+    ],
+    "test-engineer": [
+      { "signal": "unit test", "type": "phrase", "weight": 0.35 },
+      { "signal": "integration test", "type": "phrase", "weight": 0.4 },
+      { "signal": "coverage", "type": "token", "weight": 0.3 },
+      { "signal": "webapplicationfactory", "type": "token", "weight": 0.4 },
+      { "signal": "test strategy", "type": "phrase", "weight": 0.35 },
+      { "signal": "mock", "type": "token", "weight": 0.2 },
+      { "signal": "xunit", "type": "token", "weight": 0.25 },
+      { "signal": "nunit", "type": "token", "weight": 0.25 }
+    ]
+  },
+  "scoring": {
+    "matching": {
+      "caseInsensitive": true,
+      "uniqueness": "sum weights for unique matched signals",
+      "precedence": ["phrase", "token"],
+      "clampPerAgent": [0, 1]
+    },
+    "conflictAdjustments": [
+      {
+        "name": "security-keyword-boost",
+        "ifMatchedAny": ["auth", "authorization", "jwt", "secret", "key vault", "owasp", "vulnerability", "xss", "csrf", "sqli", "threat model"],
+        "apply": { "security-auditor": 0.15, "allNonSecurityAgents": -0.05 }
+      },
+      {
+        "name": "active-build-break-boost",
+        "ifMatchedAnyRegex": ["cs\\d{4}", "nu\\d{4}"],
+        "apply": { "build-error-resolver": 0.15 }
+      },
+      {
+        "name": "architecture-pair-boost",
+        "ifAllMatched": ["architecture"],
+        "ifAnyMatched": ["modular monolith", "clean architecture"],
+        "apply": { "dotnet-architect": 0.1 }
+      },
+      {
+        "name": "ef-perf-overlap",
+        "ifAnyMatchedGroupA": ["ef core", "dbcontext"],
+        "ifAnyMatchedGroupB": ["latency", "bottleneck"],
+        "apply": { "ef-core-specialist": 0.1, "performance-analyst": 0.05 }
+      },
+      {
+        "name": "pr-context-refactor-penalty",
+        "ifAnyMatched": ["pr", "pull request"],
+        "apply": { "refactor-cleaner": -0.1 }
+      }
+    ],
+    "confidence": {
+      "winner": "highest final score",
+      "runnerUp": "second highest final score",
+      "formula": "clamp(winner - 0.35 * runnerUp + 0.15 * winner, 0, 1)"
+    }
+  },
+  "thresholds": {
+    "high": { "min": 0.75, "action": "delegate_primary_only" },
+    "medium": { "min": 0.55, "max": 0.74, "action": "delegate_primary_with_backup" },
+    "low": { "max": 0.54, "action": "fallback_default_agent" }
+  },
+  "tieBreakOrder": [
+    "security-auditor",
+    "build-error-resolver",
+    "dotnet-architect",
+    "ef-core-specialist",
+    "performance-analyst",
+    "narrower-domain-specialist"
+  ],
+  "fallbackPolicy": {
+    "useDefaultAgentWhen": [
+      "mixed intent with no dominant domain",
+      "insufficient context",
+      "confidence below 0.55 after tie-breakers"
+    ],
+    "clarification": {
+      "allowed": true,
+      "maxQuestions": 1,
+      "instruction": "Ask one concise clarifying question, then re-evaluate."
+    }
+  },
+  "executionSemantics": {
+    "planImplementationDecoupled": true,
+    "implementationRequestRouting": {
+      "reEvaluatePerRequest": true,
+      "allowAgentChangeFromPlan": true
+    },
+    "lowConfidenceFallback": {
+      "enabled": true,
+      "confidenceThreshold": 0.55,
+      "target": "default-agent"
+    },
+    "explicitInvocationOverride": {
+      "enabled": true,
+      "precedence": "override-automatic-routing"
+    }
+  },
+  "handoffContract": {
+    "requiredFields": [
+      "selection_reason",
+      "expected_output",
+      "constraints"
+    ],
+    "constraintsExamples": [
+      "read-only",
+      "edit allowed",
+      "scope boundaries"
+    ]
+  }
+}
+

@@ -1,7 +1,15 @@
 ---
+name: Test Engineer
 description: "Use when writing tests, designing test strategy, setting up WebApplicationFactory, Testcontainers, or improving coverage."
-tools: [read, edit, search, execute]
-model: ['Claude Sonnet 4.5 (copilot)', 'GPT-5 (copilot)']
+tools:
+  - read
+  - edit
+  - search
+  - execute
+model:
+  - 'Claude Sonnet 4.6 (copilot)'
+  - 'GPT-5.3-Codex (copilot)'
+  - 'GPT-5.4 (copilot)'
 ---
 
 # Test Engineer Agent

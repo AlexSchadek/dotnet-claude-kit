@@ -1,7 +1,15 @@
 ---
+name: Build Error Resolver
 description: "Use when fixing build errors, compilation failures, CS errors, or broken builds. Iterates parse-fix-rebuild."
-tools: [read, edit, search, execute]
-model: ['Claude Sonnet 4.5 (copilot)', 'GPT-5 (copilot)']
+tools:
+  - read
+  - edit
+  - search
+  - execute
+model:
+  - 'Claude Sonnet 4.6 (copilot)'
+  - 'GPT-5.3-Codex (copilot)'
+  - 'GPT-5.4 (copilot)'
 ---
 
 # Build Error Resolver Agent

@@ -1,7 +1,15 @@
 ---
+name: EF Core Specialist
 description: "Use when designing DbContext, writing EF Core queries, managing migrations, or optimizing data access."
-tools: [read, edit, search, execute]
-model: ['Claude Sonnet 4.5 (copilot)', 'GPT-5 (copilot)']
+tools:
+  - read
+  - edit
+  - search
+  - execute
+model:
+  - 'Claude Sonnet 4.6 (copilot)'
+  - 'GPT-5.3-Codex (copilot)'
+  - 'GPT-5.4 (copilot)'
 ---
 
 # EF Core Specialist Agent
